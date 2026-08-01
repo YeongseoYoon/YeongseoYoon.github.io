@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { AUTO_HIDE_REPORT_THRESHOLD } from '@/shared/config';
+import { AUTO_HIDE_REPORT_THRESHOLD, DAILY_REPORT_LIMIT } from '@/shared/config';
 import { creatureApi } from '@/entities/creature';
 import { moderationLogApi } from '@/entities/moderation-log';
 import { reportApi } from '@/entities/report';
@@ -56,5 +56,21 @@ describe('신고 접수', () => {
 
     const logs = await moderationLogApi.listRecent(20);
     expect(logs.some((l) => l.creatureId === TARGET && l.action === 'temp_hide')).toBe(true);
+  });
+
+  it('TC-6-8 한 사용자의 일일 신고 상한을 넘으면 거부한다', async () => {
+    const targets = await creatureApi.listByStatus('published');
+    expect(targets.length).toBeGreaterThan(DAILY_REPORT_LIMIT);
+
+    for (const creature of targets.slice(0, DAILY_REPORT_LIMIT)) {
+      await submitReport({ creatureId: creature.id, reporterId: 'daily-limiter', reason: 'spam' });
+    }
+    await expect(
+      submitReport({
+        creatureId: targets[DAILY_REPORT_LIMIT].id,
+        reporterId: 'daily-limiter',
+        reason: 'spam',
+      }),
+    ).rejects.toThrow('오늘 신고할 수 있는 횟수');
   });
 });

@@ -17,6 +17,9 @@ const PublicTankPage = lazy(() =>
 const AdminPage = lazy(() =>
   import('@/pages/admin').then((module) => ({ default: module.AdminPage })),
 );
+const GuidelinesPage = lazy(() =>
+  import('@/pages/guidelines').then((module) => ({ default: module.GuidelinesPage })),
+);
 
 function deferred(page: ReactNode) {
   return (
@@ -50,6 +53,7 @@ export const router = createBrowserRouter(
         { path: 'my-tank', element: deferred(<MyTankPage />) },
         { path: 'tank/:authorId', element: deferred(<PublicTankPage />) },
         { path: 'admin', element: deferred(<AdminPage />) },
+        { path: 'guidelines', element: deferred(<GuidelinesPage />) },
       ],
     },
   ],

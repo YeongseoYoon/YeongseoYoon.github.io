@@ -3,3 +3,4 @@ export { DrawPage } from './draw';
 export { MyTankPage } from './my-tank';
 export { PublicTankPage } from './public-tank';
 export { AdminPage } from './admin';
+export { GuidelinesPage } from './guidelines';

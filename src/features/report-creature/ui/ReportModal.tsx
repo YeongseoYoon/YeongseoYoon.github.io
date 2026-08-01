@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button, Icon } from '@/shared/ui';
 import { cn } from '@/shared/lib';
 import { useSession } from '@/entities/session';
@@ -51,6 +52,7 @@ export function ReportModal({ creatureId, creatureName, onClose, onSubmitted }: 
         </div>
         <p className="mx-6 mb-4 mt-1.5 text-[13px] leading-normal text-ink-soft">
           ‘{creatureName}’와 작품 메시지를 신고합니다. 신고 내용은 운영자만 확인해요.
+          {' '}<Link to="/guidelines" className="font-semibold text-brand-accessible hover:underline">신고 기준 보기</Link>
         </p>
 
         <div className="flex flex-col gap-3.5 px-6">

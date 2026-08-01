@@ -14,5 +14,6 @@ export interface ReportRepository {
   listUnresolved(): Promise<Report[]>;
   /** 남용 방지: 같은 사용자가 같은 작품을 이미 신고했는지 */
   hasReported(creatureId: string, reporterId: string): Promise<boolean>;
+  countByReporterSince(reporterId: string, since: number): Promise<number>;
   markResolvedByCreature(creatureId: string): Promise<void>;
 }

@@ -1,4 +1,4 @@
-import { AUTO_HIDE_REPORT_THRESHOLD } from '@/shared/config';
+import { AUTO_HIDE_REPORT_THRESHOLD, DAILY_REPORT_LIMIT } from '@/shared/config';
 import { isSupabaseMode } from '@/shared/api';
 import { canTransition, creatureApi } from '@/entities/creature';
 import { moderationLogApi } from '@/entities/moderation-log';
@@ -28,6 +28,13 @@ export async function submitReport(params: SubmitReportParams): Promise<SubmitRe
     throw new Error('기타를 선택하면 사유를 적어 주세요.');
   }
   if (isSupabaseMode) return submitReportOnServer(params);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dailyCount = await reportApi.countByReporterSince(params.reporterId, today.getTime());
+  if (dailyCount >= DAILY_REPORT_LIMIT) {
+    throw new Error('오늘 신고할 수 있는 횟수를 모두 사용했어요. 내일 다시 이용해 주세요.');
+  }
 
   const already = await reportApi.hasReported(params.creatureId, params.reporterId);
   if (already) {

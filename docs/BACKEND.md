@@ -20,6 +20,7 @@ Supabase Dashboard에서 프로젝트를 만든 뒤 Authentication의 Anonymous 
 3. `supabase/migrations/202608010003_release_quota.sql`
 4. `supabase/migrations/202608010004_admin_access.sql`
 5. `supabase/migrations/202608010005_pretty_sample_creatures.sql` (기존 샘플 데이터가 있을 때)
+6. `supabase/migrations/202608020001_report_rate_limit.sql`
 
 `.env.example`을 `.env.local`로 복사하고 다음 값을 채운다.
 
@@ -78,4 +79,4 @@ npm run test:supabase
 
 현재 프로젝트는 Supabase Free 조직에 생성되어 결제가 발생하지 않는다. 무료 한도를 넘기기 전에 사용량 알림을 확인하고, 장기간 미사용 시 프로젝트가 일시 중지될 수 있다는 점을 감안한다. 트래픽이 늘면 우선 Realtime 구독 범위와 조회량을 줄이는 방향으로 최적화하고, 유료 전환은 별도 결정으로 남긴다.
 
-Anonymous Sign-Ins는 공개 앱에서 자동화 공격 대상이 될 수 있다. MVP 이후에는 CAPTCHA와 요청 속도 제한을 추가하는 것을 권장한다.
+신고 RPC는 사용자별 하루 10건 상한과 동시 요청 직렬화를 적용한다. Anonymous Sign-Ins 자체는 공개 앱에서 자동화 공격 대상이 될 수 있으므로, 트래픽이 커지면 Supabase Auth의 CAPTCHA를 운영 키와 함께 추가한다.

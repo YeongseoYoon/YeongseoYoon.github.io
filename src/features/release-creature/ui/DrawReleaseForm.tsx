@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/shared/ui';
 import { cn, useAsync } from '@/shared/lib';
 import { KIND_META, type Creature, type CreatureKind } from '@/entities/creature';
@@ -136,6 +137,9 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
           바로 바다에 방류돼요 · 신고가 쌓이면 검토해요
           {quota.data ? ` · 오늘 ${quota.data.remaining}회 남음` : ''}
         </span>
+        <Link to="/guidelines" className="text-center text-[11.5px] font-semibold text-brand-accessible hover:underline">
+          방류 전 콘텐츠 가이드 보기
+        </Link>
       </div>
     </div>
   );

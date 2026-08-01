@@ -66,6 +66,15 @@ export const supabaseReportApi: ReportRepository = {
     if (error) throw error;
     return (count ?? 0) > 0;
   },
+  countByReporterSince: async (reporterId, since) => {
+    const { count, error } = await getSupabaseClient()
+      .from('reports')
+      .select('id', { count: 'exact', head: true })
+      .eq('reporter_id', reporterId)
+      .gte('created_at', new Date(since).toISOString());
+    if (error) throw error;
+    return count ?? 0;
+  },
   markResolvedByCreature: async () => {
     throw new Error('Supabase 모드의 신고 종결은 서버 운영 함수에서만 가능합니다.');
   },

@@ -26,6 +26,12 @@ const mockReportApi: ReportRepository = {
     );
     return rows.length > 0;
   },
+  countByReporterSince: async (reporterId, since) => {
+    const rows = await reports.list(
+      (report) => report.reporterId === reporterId && report.createdAt >= since,
+    );
+    return rows.length;
+  },
   markResolvedByCreature: async (creatureId) => {
     const rows = await reports.list((r) => r.creatureId === creatureId && !r.resolved);
     // 순차 처리 — 동시에 쓰면 서로의 변경을 덮어쓸 수 있다.

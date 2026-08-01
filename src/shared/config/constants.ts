@@ -24,6 +24,9 @@ export const AUTO_HIDE_REPORT_THRESHOLD = 3;
 /** 한 사용자가 같은 작품에 신고할 수 있는 최대 횟수 (남용 방지) */
 export const MAX_REPORTS_PER_USER_PER_CREATURE = 1;
 
+/** 한 사용자의 하루 신고 상한. 자동화·보복 신고로 운영 큐가 도배되는 것을 막는다. */
+export const DAILY_REPORT_LIMIT = 10;
+
 /**
  * 시각 API 지연 시뮬레이션 (ms) — 실제 네트워크 느낌.
  * 테스트에서는 0으로 두어 스위트가 느려지지 않게 한다.

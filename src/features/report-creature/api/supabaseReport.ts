@@ -16,7 +16,9 @@ export async function submitReportOnServer(
     if (message.includes('already reported') || message.includes('duplicate key')) {
       throw new Error('이미 신고한 작품이에요.');
     }
+    if (message.includes('daily report limit')) {
+      throw new Error('오늘 신고할 수 있는 횟수를 모두 사용했어요. 내일 다시 이용해 주세요.');
+    }
     throw error;
   }
 }
-
