@@ -54,31 +54,37 @@ export function PixelCanvas({ pixels, onPaintCell, onStrokeStart, hint, guideSpr
         />
       )}
       <div
-        className="grid h-full w-full touch-none"
-        style={{
-          gridTemplateColumns: `repeat(${CANVAS.width}, 1fr)`,
-          gridTemplateRows: `repeat(${CANVAS.height}, 1fr)`,
-        }}
+        className="relative h-full w-full touch-none"
       >
-        {pixels.map((color, i) => (
-          <button
-            key={i}
-            type="button"
-            tabIndex={-1}
-            aria-label={`픽셀 ${i}`}
-            className="border-[0.5px] border-black/[.06]"
-            style={{ backgroundColor: color ?? 'transparent' }}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              drawing.current = true;
-              onStrokeStart?.();
-              onPaintCell(i);
-            }}
-            onPointerEnter={() => {
-              if (drawing.current) onPaintCell(i);
-            }}
-          />
-        ))}
+        {pixels.map((color, i) => {
+          const col = i % CANVAS.width;
+          const row = Math.floor(i / CANVAS.width);
+          return (
+            <button
+              key={i}
+              type="button"
+              tabIndex={-1}
+              aria-label={`픽셀 ${i}`}
+              className="absolute border-[0.5px] border-black/[.06]"
+              style={{
+                left: `${(col / CANVAS.width) * 100}%`,
+                top: `${(row / CANVAS.height) * 100}%`,
+                width: `${100 / CANVAS.width}%`,
+                height: `${100 / CANVAS.height}%`,
+                backgroundColor: color ?? 'transparent',
+              }}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                drawing.current = true;
+                onStrokeStart?.();
+                onPaintCell(i);
+              }}
+              onPointerEnter={() => {
+                if (drawing.current) onPaintCell(i);
+              }}
+            />
+          );
+        })}
       </div>
       <span className="pointer-events-none absolute left-3 top-2.5 rounded-md bg-white/85 px-1.5 py-[3px] text-[11px] font-semibold text-ink-faint">
         {CANVAS.width}×{CANVAS.height}
