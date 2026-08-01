@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { buildCreatureShareUrl } from '../model/share';
 
 describe('buildCreatureShareUrl', () => {
-  it('builds the production user-page URL without a repository path', () => {
-    expect(buildCreatureShareUrl('sample-id', 'https://yeongseoyoon.github.io/')).toBe(
-      'https://yeongseoyoon.github.io/?focus=sample-id',
+  it('builds the production Vercel URL without a repository path', () => {
+    expect(buildCreatureShareUrl('sample-id', 'https://endless-aquarium.vercel.app/')).toBe(
+      'https://endless-aquarium.vercel.app/?focus=sample-id',
     );
   });
 

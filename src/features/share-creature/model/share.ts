@@ -1,7 +1,7 @@
 import type { Creature } from '@/entities/creature';
 import { assetUrl, spriteToDataUrl } from '@/shared/lib';
 
-const PUBLIC_APP_URL = 'https://yeongseoyoon.github.io/';
+const PUBLIC_APP_URL = 'https://endless-aquarium.vercel.app/';
 
 export function buildCreatureShareUrl(
   creatureId: string,
@@ -101,7 +101,7 @@ export async function createCreatureStoryCard(creature: Creature): Promise<Blob>
   ctx.fillText('나만의 생물을 그리고 바다에 방류해 보세요', 540, 1755);
   ctx.font = '500 26px Pretendard, sans-serif';
   ctx.fillStyle = 'rgba(255, 255, 255, .8)';
-  ctx.fillText('yeongseoyoon.github.io', 540, 1815);
+  ctx.fillText('endless-aquarium.vercel.app', 540, 1815);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
