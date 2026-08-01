@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { cn } from '@/shared/lib';
+import { assetUrl, cn } from '@/shared/lib';
 import type { Creature } from '@/entities/creature';
 import { SEED_ZONE_ID } from '@/entities/zone';
 import { useSession } from '@/entities/session';
@@ -37,7 +37,7 @@ export function AdminConsole() {
       <div className="flex h-[60px] shrink-0 items-center justify-between gap-3 border-b border-black/10 bg-white px-4 sm:px-7">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[9px] bg-brand">
-            <img src="/assets/minnow.png" width={20} height={13} className="pixel" alt="" />
+            <img src={assetUrl('minnow.png')} width={20} height={13} className="pixel" alt="" />
           </span>
           <span className="truncate whitespace-nowrap text-[15px] font-bold tracking-tight">
             끝없는 수족관 <span className="font-medium text-ink-soft">운영 콘솔</span>

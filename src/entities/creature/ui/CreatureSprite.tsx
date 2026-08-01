@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { cn, spriteToDataUrl } from '@/shared/lib';
+import { assetUrl, cn, spriteToDataUrl } from '@/shared/lib';
 import type { Creature, MotionKind } from '../model/types';
 
 interface CreatureSpriteProps {
@@ -41,7 +41,7 @@ export function CreatureSprite({
 }: CreatureSpriteProps) {
   const src = useMemo(() => {
     if (creature.sprite) return spriteToDataUrl(creature.sprite);
-    return `/assets/${creature.spriteKey ?? 'clownfish'}.png`;
+    return assetUrl(`${creature.spriteKey ?? 'clownfish'}.png`);
   }, [creature.sprite, creature.spriteKey]);
 
   if (!src) return null;

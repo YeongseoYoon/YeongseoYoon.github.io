@@ -113,6 +113,10 @@ src/
 
 Supabase 연결은 `.env.example`을 `.env.local`로 복사한 뒤 URL과 publishable key를 채우면 됩니다. 스키마 적용 순서와 무료 플랜 운용 조건은 [`docs/BACKEND.md`](./docs/BACKEND.md)에 정리했습니다.
 
+## 배포
+
+`main`에 푸시하면 GitHub Actions가 테스트와 프로덕션 빌드를 실행한 뒤 GitHub Pages에 자동 배포합니다. 배포 주소는 `https://yeongseoyoon.github.io/endless-aquarium/`이며, 저장소 Actions secrets에 `VITE_SUPABASE_URL`과 `VITE_SUPABASE_PUBLISHABLE_KEY`가 필요합니다. 프로젝트 하위 경로와 SPA 직접 접속을 지원하도록 Vite base와 `404.html` fallback을 함께 적용합니다.
+
 ---
 
 ## 앱인토스(Apps in Toss) 전환

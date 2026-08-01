@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { assetUrl } from '@/shared/lib';
 import { Button } from '@/shared/ui';
 import { isSupabaseMode } from '@/shared/api';
 import { useSession } from '@/entities/session';
@@ -24,9 +25,9 @@ export function AdminPage() {
     <div className="flex h-full flex-col bg-[#dfe6e9] p-0 lg:p-8">
       <div className="mx-auto mb-4 hidden w-full max-w-[1400px] items-center justify-between lg:flex">
         <span className="text-[13px] font-semibold text-ink-sub">운영 콘솔</span>
-        <a href="/" className="text-[13px] font-semibold text-brand-accessible hover:underline">
+        <Link to="/" className="text-[13px] font-semibold text-brand-accessible hover:underline">
           ← 탐험으로 돌아가기
-        </a>
+        </Link>
       </div>
       <div className="min-h-0 flex-1">
         <AdminConsole />
@@ -49,7 +50,7 @@ function AdminGate({ inToss, serverMode }: { inToss: boolean; serverMode: boolea
   return (
     <div className="grid min-h-full place-items-center bg-[#dfe6e9] p-6">
       <div className="w-full max-w-sm rounded-2xl bg-white p-7 shadow-[0_18px_48px_rgba(23,68,76,.16)]">
-        <img src="/assets/puffer.png" width={48} height={34} className="pixel mb-4" alt="" />
+        <img src={assetUrl('puffer.png')} width={48} height={34} className="pixel mb-4" alt="" />
         <h1 className="m-0 text-lg font-bold tracking-tight">운영 콘솔</h1>
         {serverMode ? (
           <>

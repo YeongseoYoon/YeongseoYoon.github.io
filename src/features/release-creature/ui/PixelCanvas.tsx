@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { CANVAS } from '@/shared/config';
+import { assetUrl } from '@/shared/lib';
 
 interface PixelCanvasProps {
   pixels: (string | null)[];
@@ -34,7 +35,7 @@ export function PixelCanvas({ pixels, onPaintCell, onStrokeStart, hint, guideSpr
     >
       {guideSpriteKey && (
         <img
-          src={`/assets/${guideSpriteKey}.png`}
+          src={assetUrl(`${guideSpriteKey}.png`)}
           alt=""
           aria-hidden
           className="pixel pointer-events-none absolute left-1/2 top-1/2 w-[70%] -translate-x-1/2 -translate-y-1/2 opacity-15"

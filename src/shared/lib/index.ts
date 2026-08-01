@@ -17,3 +17,4 @@ export {
   type DecodedSprite,
 } from './spriteCodec';
 export { spriteToDataUrl } from './spriteRaster';
+export { assetUrl } from './assetUrl';

@@ -1,4 +1,5 @@
 import { CreatureSprite, spriteBaseSize, type Creature } from '@/entities/creature';
+import { assetUrl } from '@/shared/lib';
 import { SandFloor } from '@/shared/ui';
 
 /** 미리보기 수조 안의 상대 위치(%) — 화면 폭이 변해도 비율로 유지된다. */
@@ -26,7 +27,7 @@ export function MyTankPreview({ creatures }: { creatures: Creature[] }) {
       />
       <SandFloor height={44} className="-inset-x-2.5" />
       <img
-        src="/assets/kelp.png"
+        src={assetUrl('kelp.png')}
         width={33}
         height={55}
         className="pixel absolute bottom-[30px] right-5 origin-bottom animate-weedSway"
