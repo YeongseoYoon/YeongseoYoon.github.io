@@ -70,4 +70,18 @@ describe('모바일 그리기 도구', () => {
     expect(props.onColor).toHaveBeenCalledWith(DRAW_PALETTE[1]);
     expect(props.onTool).toHaveBeenLastCalledWith('brush');
   });
+
+  it('지우개를 다시 누르면 펜으로 돌아가고 지우개 촉 두께만 변경한다', () => {
+    const props = renderControls({ tool: 'eraser', brush: 2 });
+    const selectedSize = screen.getByRole('button', { name: '보통 지우개' });
+    expect(selectedSize.getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByText('펜으로')).toBeTruthy();
+
+    screen.getByRole('button', { name: '굵게 지우개' }).click();
+    expect(props.onBrush).toHaveBeenCalledWith(3);
+    expect(props.onTool).not.toHaveBeenCalled();
+
+    screen.getByRole('button', { name: '지우개' }).click();
+    expect(props.onTool).toHaveBeenCalledWith('brush');
+  });
 });

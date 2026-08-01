@@ -43,10 +43,19 @@ export function useDrawing(init: DrawingInit = {}) {
   });
   const [tool, setTool] = useState<DrawTool>('brush');
   const [color, setColor] = useState<string>(DRAW_PALETTE[0]);
-  const [brush, setBrush] = useState<BrushSize>(1);
+  const [brushByTool, setBrushByTool] = useState<Record<'brush' | 'eraser', BrushSize>>({
+    brush: 1,
+    eraser: 1,
+  });
   const [kind, setKind] = useState<CreatureKind>(init.kind ?? 'fish');
   const [name, setName] = useState(init.name ?? '');
   const [message, setMessage] = useState(init.message ?? '');
+  const sizedTool = tool === 'eraser' ? 'eraser' : 'brush';
+  const brush = brushByTool[sizedTool];
+
+  const setBrush = useCallback((size: BrushSize) => {
+    setBrushByTool((current) => ({ ...current, [sizedTool]: size }));
+  }, [sizedTool]);
 
   const paintCell = useCallback(
     (index: number) => {
@@ -134,6 +143,8 @@ export function useDrawing(init: DrawingInit = {}) {
     tool,
     color,
     brush,
+    penBrush: brushByTool.brush,
+    eraserBrush: brushByTool.eraser,
     kind,
     name,
     message,

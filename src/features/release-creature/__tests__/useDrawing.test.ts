@@ -49,6 +49,34 @@ describe('그리기 상태', () => {
     expect(painted).toBe(9); // 3×3
   });
 
+  it('TC-5-12 펜과 지우개의 촉 두께를 각각 기억한다', () => {
+    const { result } = renderHook(() => useDrawing());
+    act(() => result.current.setBrush(3));
+    expect(result.current.brush).toBe(3);
+
+    act(() => result.current.setTool('eraser'));
+    expect(result.current.brush).toBe(1);
+    act(() => result.current.setBrush(2));
+    expect(result.current.eraserBrush).toBe(2);
+
+    act(() => result.current.setTool('brush'));
+    expect(result.current.brush).toBe(3);
+    expect(result.current.penBrush).toBe(3);
+  });
+
+  it('TC-5-13 굵은 지우개는 선택한 촉 범위만 지운다', () => {
+    const { result } = renderHook(() => useDrawing());
+    act(() => result.current.setBrush(3));
+    act(() => result.current.paintCell(at(5, 5)));
+    expect(result.current.pixels.filter((pixel) => pixel !== null)).toHaveLength(9);
+
+    act(() => result.current.setTool('eraser'));
+    act(() => result.current.setBrush(2));
+    act(() => result.current.paintCell(at(5, 5)));
+
+    expect(result.current.pixels.filter((pixel) => pixel !== null)).toHaveLength(5);
+  });
+
   it('TC-5-5 캔버스 경계를 넘어 칠하지 않는다', () => {
     const { result } = renderHook(() => useDrawing());
     act(() => result.current.setBrush(3));
