@@ -24,6 +24,7 @@ npm run dev        # http://localhost:5173
 | `npm run assets:share` | OG 대표 이미지 재생성 |
 | `npm run test:watch` | 테스트 감시 모드 |
 | `npm run test:supabase` | 연결된 Supabase에서 인증·RLS·주요 RPC 통합 테스트 |
+| `npm run seed:supabase` | 공유 바다에 공식 샘플 생물 5마리 추가(중복 방지) |
 
 로컬(앱인토스 밖)에서는 자동으로 **기기 식별 + 목업 데이터**로 동작해, 토스 없이도 전체 흐름을 체험할 수 있습니다. 하단 내비로 화면을 이동하세요.
 
