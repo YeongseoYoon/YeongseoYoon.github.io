@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "assets:share": "node scripts/generate-share-assets.mjs",
+    "build:toss": "ait build",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",

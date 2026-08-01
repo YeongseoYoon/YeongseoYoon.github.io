@@ -19,6 +19,7 @@ yarn-error.log*
 
 # apps in toss build artifacts
 .granite
+*.ait
 
 # 로컬 에이전트/도구 상태 (대화 로그 포함 — 공개 금지)
 .omc/

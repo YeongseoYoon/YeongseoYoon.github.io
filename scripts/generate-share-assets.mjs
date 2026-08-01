@@ -56,4 +56,27 @@ const svg = `
 await sharp(Buffer.from(svg))
   .png()
   .toFile(fileURLToPath(new URL('../public/og-aquarium.png', import.meta.url)));
-console.log('Generated public/og-aquarium.png (1200x630)');
+
+const iconSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="iconWater" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bceff3"/>
+      <stop offset="0.55" stop-color="#34b7c7"/>
+      <stop offset="1" stop-color="#08758a"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#iconWater)"/>
+  <circle cx="414" cy="99" r="20" fill="none" stroke="#e4ffff" stroke-width="9" opacity=".75"/>
+  <circle cx="448" cy="57" r="9" fill="none" stroke="#e4ffff" stroke-width="7" opacity=".7"/>
+  <path d="M0 416 C120 365 235 445 350 405 C418 382 465 392 512 414 V512 H0Z" fill="#ead39a"/>
+  <g style="image-rendering:pixelated">
+    <image href="${clownfish}" x="84" y="172" width="336" height="144"/>
+    <image href="${kelp}" x="390" y="330" width="76" height="132"/>
+  </g>
+</svg>`;
+
+await sharp(Buffer.from(iconSvg))
+  .png()
+  .toFile(fileURLToPath(new URL('../public/app-icon.png', import.meta.url)));
+console.log('Generated public/og-aquarium.png and public/app-icon.png');
