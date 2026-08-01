@@ -1,7 +1,9 @@
 import { canTransition, creatureApi, type Creature, type CreatureStatus } from '@/entities/creature';
+import { isSupabaseMode } from '@/shared/api';
 import { moderationLogApi, type ModerationAction } from '@/entities/moderation-log';
 import { reportApi } from '@/entities/report';
 import { userApi } from '@/entities/user';
+import { moderateCreatureOnServer } from '../api/supabaseModeration';
 
 /**
  * 운영 조치 유스케이스 (PRD 7.3).
@@ -53,6 +55,9 @@ async function require(creatureId: string): Promise<Creature> {
 
 /** 승인 후 지정 구역에 방류(published). */
 export async function approveCreature(params: ModerateParams & { zoneId: string }): Promise<Creature> {
+  if (isSupabaseMode) {
+    return moderateCreatureOnServer({ ...params, action: 'approve', zoneId: params.zoneId });
+  }
   const creature = await require(params.creatureId);
   return applyAction(creature, 'published', 'approve', params, {
     zoneId: params.zoneId,
@@ -63,6 +68,7 @@ export async function approveCreature(params: ModerateParams & { zoneId: string 
 
 /** 반려 — 사유를 창작자에게 안내(수정 후 재제출 가능). */
 export async function rejectCreature(params: ModerateParams): Promise<Creature> {
+  if (isSupabaseMode) return moderateCreatureOnServer({ ...params, action: 'reject' });
   const creature = await require(params.creatureId);
   const updated = await applyAction(creature, 'rejected', 'reject', params, {
     rejectionReason: params.reason,
@@ -73,6 +79,7 @@ export async function rejectCreature(params: ModerateParams): Promise<Creature> 
 
 /** 숨김 — 공개물을 비공개 처리하고 관련 신고를 종결. */
 export async function hideCreature(params: ModerateParams): Promise<Creature> {
+  if (isSupabaseMode) return moderateCreatureOnServer({ ...params, action: 'hide' });
   const creature = await require(params.creatureId);
   const updated = await applyAction(creature, 'hidden', 'hide', params, {
     rejectionReason: params.reason,
@@ -84,6 +91,7 @@ export async function hideCreature(params: ModerateParams): Promise<Creature> {
 
 /** 신고 누적으로 인한 임시 숨김 (운영자 확인 전까지). */
 export async function tempHideCreature(params: ModerateParams): Promise<Creature> {
+  if (isSupabaseMode) return moderateCreatureOnServer({ ...params, action: 'temp_hide' });
   const creature = await require(params.creatureId);
   if (!canTransition(creature.status, 'hidden')) return creature;
   return applyAction(creature, 'hidden', 'temp_hide', params);

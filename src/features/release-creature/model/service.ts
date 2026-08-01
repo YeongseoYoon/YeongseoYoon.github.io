@@ -1,8 +1,10 @@
 import { MESSAGE_MAX_LENGTH } from '@/shared/config';
 import { isSpriteEmpty } from '@/shared/lib';
+import { isSupabaseMode } from '@/shared/api';
 import { creatureApi, type Creature, type CreatureKind } from '@/entities/creature';
 import { zoneApi } from '@/entities/zone';
 import { getReleaseQuota } from './quota';
+import { releaseCreatureOnServer, saveDraftOnServer } from '../api/supabaseRelease';
 
 export interface ReleaseInput {
   kind: CreatureKind;
@@ -67,6 +69,7 @@ function validate(input: ReleaseInput): string {
  */
 export async function releaseCreature(input: ReleaseInput): Promise<Creature> {
   const name = validate(input);
+  if (isSupabaseMode) return releaseCreatureOnServer({ ...input, name });
   return serializeRelease(async () => {
     const quota = await getReleaseQuota(input.authorId);
     if (quota.remaining <= 0) {
@@ -106,6 +109,7 @@ export async function releaseCreature(input: ReleaseInput): Promise<Creature> {
 export async function saveDraft(
   input: Omit<ReleaseInput, 'fromDraftId'> & { draftId?: string | null },
 ): Promise<Creature> {
+  if (isSupabaseMode) return saveDraftOnServer(input);
   const name = input.name.trim() || '이름 없는 생물';
   if (input.draftId) {
     return creatureApi.update(input.draftId, {

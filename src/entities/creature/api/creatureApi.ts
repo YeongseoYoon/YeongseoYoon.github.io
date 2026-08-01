@@ -1,4 +1,4 @@
-import { db } from '@/shared/api';
+import { db, isSupabaseMode } from '@/shared/api';
 import { createId } from '@/shared/lib';
 import type { Creature } from '../model/types';
 import type { CreatureRepository, NewCreatureInput } from '../model/repository';
@@ -6,6 +6,7 @@ import { motionForKind } from '../model/meta';
 import { canTransition } from '../model/status';
 import { slotToPoint } from '../model/worldCoords';
 import { seedCreatures } from './seed';
+import { supabaseCreatureApi } from './supabaseCreatureApi';
 
 const creatures = db.collection<Creature>('creatures', seedCreatures);
 
@@ -38,7 +39,7 @@ async function slotsReady(): Promise<void> {
   return slotMigration;
 }
 
-export const creatureApi: CreatureRepository = {
+const mockCreatureApi: CreatureRepository = {
   get: async (id) => {
     await slotsReady();
     const creature = await creatures.find(id);
@@ -106,3 +107,7 @@ export const creatureApi: CreatureRepository = {
     await creatures.update(id, { status: 'deleted' });
   },
 };
+
+export const creatureApi: CreatureRepository = isSupabaseMode
+  ? supabaseCreatureApi
+  : mockCreatureApi;

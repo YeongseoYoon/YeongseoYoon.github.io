@@ -14,9 +14,9 @@ function toUser(identity: Identity, isAdmin: boolean): User {
   return {
     id: identity.id,
     nickname: isAdmin ? (identity.nickname ?? '운영자') : identity.nickname,
-    role: isAdmin ? 'admin' : 'creator',
-    strikes: 0,
-    createdAt: Date.now(),
+    role: identity.role,
+    strikes: identity.strikes,
+    createdAt: identity.createdAt,
   };
 }
 
@@ -24,16 +24,21 @@ function toUser(identity: Identity, isAdmin: boolean): User {
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [adminTick, setAdminTick] = useState(0); // 잠금 해제 후 재계산 트리거
 
   useEffect(() => {
     let alive = true;
-    resolveIdentity().then((id) => {
-      if (alive) {
-        setIdentity(id);
-        setLoading(false);
-      }
-    });
+    resolveIdentity()
+      .then((id) => {
+        if (alive) setIdentity(id);
+      })
+      .catch((reason: unknown) => {
+        if (alive) setError(reason instanceof Error ? reason : new Error(String(reason)));
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
     return () => {
       alive = false;
     };
@@ -61,12 +66,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     () => ({
       user: identity ? toUser(identity, isAdmin) : null,
       loading,
+      error,
       isAdmin,
       inToss: identity?.source === 'toss',
       unlockAdmin,
       lockAdmin,
     }),
-    [identity, isAdmin, loading, unlockAdmin, lockAdmin],
+    [identity, isAdmin, loading, error, unlockAdmin, lockAdmin],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

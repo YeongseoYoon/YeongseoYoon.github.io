@@ -1,6 +1,6 @@
 # 끝없는 수족관 (Endless Aquarium)
 
-사람들이 직접 그린 물고기·해초·장식물을 검토 후 공개 바다에 **방류**하고, 다른 사람이 남긴 생물과 짧은 메시지를 탐험하며 발견하는 **공동 창작형 웹 수족관**. ([PRD](#) 기반 MVP)
+사람들이 직접 그린 물고기·해초·장식물을 공개 바다에 **방류**하고, 다른 사람이 남긴 생물과 짧은 메시지를 탐험하며 발견하는 **공동 창작형 웹 수족관**. ([PRD](#) 기반 MVP)
 
 - **플랫폼**: [앱인토스(Apps in Toss)](https://developers-apps-in-toss.toss.im/) **WebView** 앱 — 가입 없이 토스 계정으로 이용, 운영 콘솔은 지정된 계정만 접근
 - **스택**: React 18 · Vite · TypeScript · Tailwind CSS · React Router
@@ -22,6 +22,7 @@ npm run dev        # http://localhost:5173
 | `npm run lint` | 타입 검사만 (`tsc --noEmit`) |
 | `npm test` | 테스트 (Vitest, 73개) |
 | `npm run test:watch` | 테스트 감시 모드 |
+| `npm run test:supabase` | 연결된 Supabase에서 인증·RLS·주요 RPC 통합 테스트 |
 
 로컬(앱인토스 밖)에서는 자동으로 **기기 식별 + 목업 데이터**로 동작해, 토스 없이도 전체 흐름을 체험할 수 있습니다. 하단 내비로 화면을 이동하세요.
 
@@ -100,14 +101,17 @@ src/
 
 ---
 
-## 데이터 계층 (mock → 실서버 교체)
+## 데이터 계층 (mock + Supabase)
 
 > 서버 스키마·인증·실시간 설계는 [`docs/BACKEND.md`](./docs/BACKEND.md) 참고.
 > 테스트 케이스 목록은 [`docs/TEST_CASES.md`](./docs/TEST_CASES.md).
 
 - 모든 도메인 접근은 각 엔티티의 `api`(예 `creatureApi`)를 통합니다. 인터페이스는 `model/repository.ts`에 정의.
-- 현재 구현은 `shared/api/mockDb.ts`의 **IndexedDB 기반 저장소**(인위적 지연 포함, localStorage 폴백)입니다.
-- **실서버 전환**: 각 `entities/*/api/*Api.ts`의 구현만 `fetch` 호출로 바꾸면 됩니다. UI/피처 코드는 그대로.
+- `VITE_API_MODE=mock`: `shared/api/mockDb.ts`의 **IndexedDB 기반 저장소**(localStorage 폴백)로 동작합니다.
+- `VITE_API_MODE=supabase`: Supabase 익명 인증, RLS, 트랜잭션 RPC와 Realtime을 사용해 모든 사용자가 같은 바다를 공유합니다.
+- 브라우저에는 publishable key만 둡니다. 쓰기·운영 규칙은 `supabase/migrations`의 `security definer` 함수와 RLS가 서버에서 검사합니다.
+
+Supabase 연결은 `.env.example`을 `.env.local`로 복사한 뒤 URL과 publishable key를 채우면 됩니다. 스키마 적용 순서와 무료 플랜 운용 조건은 [`docs/BACKEND.md`](./docs/BACKEND.md)에 정리했습니다.
 
 ---
 
@@ -116,18 +120,15 @@ src/
 이 저장소는 앱인토스 **WebView** 규격(Vite+React+TS)에 맞춰져 있습니다.
 
 - `@apps-in-toss/web-framework` 의존성 + [`granite.config.ts`](./granite.config.ts) 포함.
-- 신원은 `entities/session/model/auth.ts`에서 처리:
-  - 토스 환경: `getAnonymousKey()` 해시를 신원으로 사용 → **가입/백엔드 없이** 사용자 식별·방류 한도·운영 권한 판별.
-  - 로컬: `localStorage` 기기 id로 폴백.
+- 신원은 `entities/session/model/auth.ts`에서 처리합니다. 토스 익명 키 또는 웹 기기 id를 Supabase 익명 세션에 연결하며, 원본 키는 저장하지 않고 SHA-256 해시만 보관합니다.
+- 운영 권한은 클라이언트 환경 변수가 아니라 서버의 `users.role = 'admin'`과 RLS/RPC가 판별합니다.
 
 ### 배포 전 직접 해야 하는 일 (토스 계정 필요 — 대신 처리 불가)
 
 1. **[앱인토스 콘솔](https://apps-in-toss.toss.im/)에서 앱 등록** → 발급받은 `appName`/아이콘을 `granite.config.ts`에 반영.
-2. **운영자 지정(나만 콘솔 보기)**: 토스 앱에서 `/admin`에 접속하면 화면에 "내 키"가 표시됩니다. 그 값을 `.env`의 `VITE_ADMIN_KEYS`에 넣고 다시 배포하세요. (여러 명이면 쉼표로 구분)
+2. **운영자 지정**: 먼저 앱에서 한 번 접속한 뒤 Supabase SQL Editor에서 해당 사용자 UUID의 `users.role`을 `admin`으로 변경하세요. 실제 프로젝트 소유 계정에는 설정 완료했습니다.
 3. **샌드박스 테스트**: `granite.config.ts`의 `web.host`를 기기 IP로 바꾸고, 토스 샌드박스 앱에서 `intoss://endless-aquarium` 딥링크로 실행.
-4. (선택) **전체 로그인/프로필**이 필요하면 `appLogin()` + 서버 토큰 교환(`/api-partner/v1/apps-in-toss/user/oauth2/generate-token`, mTLS 파트너 인증서)을 붙입니다. 토큰 교환은 보안상 반드시 서버에서 처리하세요.
-
-> ⚠️ 현재 운영 권한 판별은 클라이언트에서 이뤄집니다(데모/샌드박스용). 실제 보안이 필요하면 익명 키를 **서버에서 검증**하세요.
+4. (선택) **전체 로그인/프로필**이 필요하면 `appLogin()`과 별도 서버 토큰 교환을 붙입니다. 현재 MVP는 가입 없는 Supabase 익명 인증을 사용합니다.
 
 ---
 

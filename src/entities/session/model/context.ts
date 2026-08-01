@@ -8,6 +8,7 @@ import type { User } from '@/entities/user';
 export interface SessionValue {
   user: User | null;
   loading: boolean;
+  error: Error | null;
   isAdmin: boolean;
   /** 앱인토스 환경 여부 (로그인 UX 분기용) */
   inToss: boolean;

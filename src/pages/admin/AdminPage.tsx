@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/shared/ui';
+import { isSupabaseMode } from '@/shared/api';
 import { useSession } from '@/entities/session';
 import { AdminConsole } from '@/widgets/admin-review';
 
@@ -16,7 +17,7 @@ export function AdminPage() {
     return <div className="grid min-h-full place-items-center text-sm text-ink-faint">확인 중…</div>;
   }
   if (!isAdmin) {
-    return <AdminGate inToss={inToss} />;
+    return <AdminGate inToss={inToss} serverMode={isSupabaseMode} />;
   }
 
   return (
@@ -35,7 +36,7 @@ export function AdminPage() {
 }
 
 /** 운영 권한이 없을 때의 게이트. */
-function AdminGate({ inToss }: { inToss: boolean }) {
+function AdminGate({ inToss, serverMode }: { inToss: boolean; serverMode: boolean }) {
   const navigate = useNavigate();
   const { unlockAdmin, user } = useSession();
   const [pass, setPass] = useState('');
@@ -50,7 +51,17 @@ function AdminGate({ inToss }: { inToss: boolean }) {
       <div className="w-full max-w-sm rounded-2xl bg-white p-7 shadow-[0_18px_48px_rgba(23,68,76,.16)]">
         <img src="/assets/puffer.png" width={48} height={34} className="pixel mb-4" alt="" />
         <h1 className="m-0 text-lg font-bold tracking-tight">운영 콘솔</h1>
-        {inToss ? (
+        {serverMode ? (
+          <>
+            <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">
+              이 계정에는 서버 운영 권한이 없어요. Supabase의 <code className="rounded bg-black/5 px-1">users.role</code>을
+              <code className="rounded bg-black/5 px-1">admin</code>으로 지정해야 합니다.
+            </p>
+            <div className="mt-3 select-all break-all rounded-lg bg-[#f1f2f3] px-3 py-2 text-[12px] text-ink-sub">
+              {user?.id ?? '(확인 중)'}
+            </div>
+          </>
+        ) : inToss ? (
           <>
             <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">
               이 토스 계정에는 운영 권한이 없어요. 아래 내 키를 <code className="rounded bg-black/5 px-1">VITE_ADMIN_KEYS</code>에 넣고 다시 배포하면 나만 콘솔을 볼 수 있어요.

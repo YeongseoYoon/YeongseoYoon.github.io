@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Icon, Screen, Toast, WaterBackground } from '@/shared/ui';
 import { useAsync } from '@/shared/lib';
+import { isSupabaseMode, subscribeToServerChanges } from '@/shared/api';
 import { creatureApi, FLOOR_Y, SWIM_BAND, type Creature } from '@/entities/creature';
 import { ReportModal } from '@/features/report-creature';
 import { AquariumMap, useMapViewport, toWorldCreatures, worldWidthFor } from '@/widgets/aquarium-map';
@@ -22,7 +23,11 @@ export function ExplorePage() {
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
 
-  const { data: allPublished } = useAsync(() => creatureApi.listByStatus('published'), []);
+  const { data: allPublished, refetch } = useAsync(() => creatureApi.listByStatus('published'), []);
+  useEffect(() => {
+    if (!isSupabaseMode) return;
+    return subscribeToServerChanges(['creatures'], refetch);
+  }, [refetch]);
   const visible = useMemo(
     () => (allPublished ?? []).filter((c) => !hiddenIds.has(c.id)),
     [allPublished, hiddenIds],

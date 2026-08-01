@@ -1,7 +1,8 @@
-import { db } from '@/shared/api';
+import { db, isSupabaseMode } from '@/shared/api';
 import { createId } from '@/shared/lib';
 import type { ModerationLog } from '../model/types';
 import type { ModerationLogRepository } from '../model/repository';
+import { supabaseModerationLogApi } from './supabaseModerationLogApi';
 
 const HOUR = 3_600_000;
 
@@ -12,7 +13,7 @@ const seedLogs = (): ModerationLog[] => [
 
 const logs = db.collection<ModerationLog>('moderationLogs', seedLogs);
 
-export const moderationLogApi: ModerationLogRepository = {
+const mockModerationLogApi: ModerationLogRepository = {
   create: (input) =>
     logs.insert({
       id: createId('m-'),
@@ -27,3 +28,7 @@ export const moderationLogApi: ModerationLogRepository = {
     return rows.sort((a, b) => b.createdAt - a.createdAt).slice(0, limit);
   },
 };
+
+export const moderationLogApi: ModerationLogRepository = isSupabaseMode
+  ? supabaseModerationLogApi
+  : mockModerationLogApi;

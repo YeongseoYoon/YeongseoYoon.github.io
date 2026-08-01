@@ -1,7 +1,9 @@
 import { AUTO_HIDE_REPORT_THRESHOLD } from '@/shared/config';
+import { isSupabaseMode } from '@/shared/api';
 import { canTransition, creatureApi } from '@/entities/creature';
 import { moderationLogApi } from '@/entities/moderation-log';
 import { reportApi, type ReportReason } from '@/entities/report';
+import { submitReportOnServer } from '../api/supabaseReport';
 
 export interface SubmitReportParams {
   creatureId: string;
@@ -25,6 +27,7 @@ export async function submitReport(params: SubmitReportParams): Promise<SubmitRe
   if (params.reason === 'etc' && !params.detail?.trim()) {
     throw new Error('기타를 선택하면 사유를 적어 주세요.');
   }
+  if (isSupabaseMode) return submitReportOnServer(params);
 
   const already = await reportApi.hasReported(params.creatureId, params.reporterId);
   if (already) {

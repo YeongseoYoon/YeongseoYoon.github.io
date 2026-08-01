@@ -1,5 +1,7 @@
 import { MESSAGE_MAX_LENGTH } from '@/shared/config';
+import { isSupabaseMode } from '@/shared/api';
 import { creatureApi, type Creature } from '@/entities/creature';
+import { deleteCreatureOnServer, updateMessageOnServer } from '../api/supabaseEdit';
 
 /**
  * 작품 한마디 수정 (PRD 8.2).
@@ -10,6 +12,7 @@ export async function updateCreatureMessage(id: string, message: string): Promis
   if (trimmed.length > MESSAGE_MAX_LENGTH) {
     throw new Error(`한마디는 ${MESSAGE_MAX_LENGTH}자까지예요.`);
   }
+  if (isSupabaseMode) return updateMessageOnServer(id, trimmed);
   return creatureApi.update(id, { message: trimmed });
 }
 
@@ -23,5 +26,6 @@ export async function deleteMyCreature(id: string, requesterId: string): Promise
   if (creature.authorId !== requesterId) {
     throw new Error('내가 방류한 생물만 삭제할 수 있어요.');
   }
+  if (isSupabaseMode) return deleteCreatureOnServer(id);
   await creatureApi.remove(id);
 }

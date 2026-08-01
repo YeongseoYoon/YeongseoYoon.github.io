@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, Screen, ScreenHeader } from '@/shared/ui';
 import { useAsync } from '@/shared/lib';
+import { isSupabaseMode, subscribeToServerChanges } from '@/shared/api';
 import { creatureApi, type Creature } from '@/entities/creature';
 import { useSession } from '@/entities/session';
 import { getReleaseQuota } from '@/features/release-creature';
@@ -16,10 +17,18 @@ export function MyTankPage() {
     () => (user ? creatureApi.listByAuthor(user.id) : Promise.resolve<Creature[]>([])),
     [user?.id],
   );
-  const { data: quota } = useAsync(
+  const { data: quota, refetch: refetchQuota } = useAsync(
     () => (user ? getReleaseQuota(user.id) : Promise.resolve(null)),
     [user?.id],
   );
+
+  useEffect(() => {
+    if (!isSupabaseMode) return;
+    return subscribeToServerChanges(['creatures'], () => {
+      refetch();
+      refetchQuota();
+    });
+  }, [refetch, refetchQuota]);
 
   const sorted = useMemo(
     () => [...(creatures ?? [])].sort((a, b) => b.createdAt - a.createdAt),

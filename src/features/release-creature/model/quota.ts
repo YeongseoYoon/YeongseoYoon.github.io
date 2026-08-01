@@ -1,5 +1,7 @@
 import { DAILY_RELEASE_LIMIT } from '@/shared/config';
+import { isSupabaseMode } from '@/shared/api';
 import { creatureApi, type Creature } from '@/entities/creature';
+import { getReleaseQuotaFromServer } from '../api/supabaseRelease';
 
 export interface ReleaseQuota {
   used: number;
@@ -22,6 +24,7 @@ function countsTowardQuota(c: Creature, now: number): boolean {
 
 /** 창작자의 오늘 방류 한도 상태 (PRD 9 창작량). */
 export async function getReleaseQuota(authorId: string, now = Date.now()): Promise<ReleaseQuota> {
+  if (isSupabaseMode) return getReleaseQuotaFromServer(authorId, now);
   const mine = await creatureApi.listByAuthor(authorId);
   const used = mine.filter((c) => countsTowardQuota(c, now)).length;
   return { used, limit: DAILY_RELEASE_LIMIT, remaining: Math.max(0, DAILY_RELEASE_LIMIT - used) };

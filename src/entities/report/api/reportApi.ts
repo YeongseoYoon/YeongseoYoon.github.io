@@ -1,12 +1,13 @@
-import { db } from '@/shared/api';
+import { db, isSupabaseMode } from '@/shared/api';
 import { createId } from '@/shared/lib';
 import type { Report } from '../model/types';
 import type { ReportRepository } from '../model/repository';
 import { seedReports } from './seed';
+import { supabaseReportApi } from './supabaseReportApi';
 
 const reports = db.collection<Report>('reports', seedReports);
 
-export const reportApi: ReportRepository = {
+const mockReportApi: ReportRepository = {
   create: (input) =>
     reports.insert({
       id: createId('r-'),
@@ -33,3 +34,5 @@ export const reportApi: ReportRepository = {
     }
   },
 };
+
+export const reportApi: ReportRepository = isSupabaseMode ? supabaseReportApi : mockReportApi;

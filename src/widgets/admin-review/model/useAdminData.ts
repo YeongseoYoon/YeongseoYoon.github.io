@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useAsync } from '@/shared/lib';
+import { isSupabaseMode, subscribeToServerChanges } from '@/shared/api';
 import { creatureApi, type Creature } from '@/entities/creature';
 import { moderationLogApi, type ModerationLog } from '@/entities/moderation-log';
 import { reportApi, type Report } from '@/entities/report';
@@ -52,12 +53,20 @@ export function useAdminData(): AdminData {
       .sort((a, b) => b.reports.length - a.reports.length);
   }, [reportedCreaturesQuery.data, reportsQuery.data]);
 
-  const refetch = () => {
+  const refetch = useCallback(() => {
     pendingQuery.refetch();
     reportsQuery.refetch();
     reportedCreaturesQuery.refetch();
     logsQuery.refetch();
-  };
+  }, [pendingQuery.refetch, reportsQuery.refetch, reportedCreaturesQuery.refetch, logsQuery.refetch]);
+
+  useEffect(() => {
+    if (!isSupabaseMode) return;
+    return subscribeToServerChanges(
+      ['creatures', 'reports', 'moderation_logs'],
+      refetch,
+    );
+  }, [refetch]);
 
   return {
     pending,

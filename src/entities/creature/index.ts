@@ -25,6 +25,7 @@ export {
   SWIM_BAND,
 } from './model/worldCoords';
 export { creatureApi } from './api/creatureApi';
+export { creatureFromRow, type CreatureRow } from './api/supabaseCreatureApi';
 
 export { CreatureSprite } from './ui/CreatureSprite';
 export { KindBadge, StatusBadge } from './ui/CreatureBadges';
