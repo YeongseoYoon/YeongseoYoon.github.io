@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { CANVAS } from '@/shared/config';
 import { assetUrl } from '@/shared/lib';
+import { getGuideLayout } from '../model/guideLayout';
 
 interface PixelCanvasProps {
   pixels: (string | null)[];
@@ -13,11 +14,12 @@ interface PixelCanvasProps {
 }
 
 /**
- * 인터랙티브 픽셀 캔버스 (18×16).
+ * 인터랙티브 픽셀 캔버스 (36×32).
  * 책임: 셀 렌더 + 포인터 드래그 → 셀 인덱스 변환. 무엇을 칠할지는 상위(useDrawing)가 정한다.
  */
 export function PixelCanvas({ pixels, onPaintCell, onStrokeStart, hint, guideSpriteKey }: PixelCanvasProps) {
   const drawing = useRef(false);
+  const guideLayout = guideSpriteKey ? getGuideLayout(guideSpriteKey) : null;
 
   // 캔버스 밖에서 손을 떼도 드로잉이 멈추도록 전역 pointerup 구독.
   useEffect(() => {
@@ -33,12 +35,18 @@ export function PixelCanvas({ pixels, onPaintCell, onStrokeStart, hint, guideSpr
       className="checker relative mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-black/10"
       style={{ aspectRatio: `${CANVAS.width} / ${CANVAS.height}` }}
     >
-      {guideSpriteKey && (
+      {guideSpriteKey && guideLayout && (
         <img
           src={assetUrl(`${guideSpriteKey}.png`)}
           alt=""
           aria-hidden
-          className="pixel pointer-events-none absolute left-1/2 top-1/2 w-[70%] -translate-x-1/2 -translate-y-1/2 opacity-15"
+          className="pixel pointer-events-none absolute opacity-20"
+          style={{
+            left: `${(guideLayout.left / CANVAS.width) * 100}%`,
+            top: `${(guideLayout.top / CANVAS.height) * 100}%`,
+            width: `${(guideLayout.width / CANVAS.width) * 100}%`,
+            height: `${(guideLayout.height / CANVAS.height) * 100}%`,
+          }}
         />
       )}
       <div

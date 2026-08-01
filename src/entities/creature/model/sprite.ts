@@ -21,7 +21,7 @@ const SPRITE_DIMENSIONS: Record<string, readonly [number, number]> = {
 
 const DEFAULT_DIMENSION: readonly [number, number] = [12, 7];
 
-/** 사용자 픽셀 스프라이트(18×16 비율)와 프리셋 모두를 지원하는 기준 크기. */
+/** 사용자 픽셀 스프라이트(36×32를 1/2 축소)와 프리셋 모두를 지원하는 기준 크기. */
 export function spriteBaseSize(spriteKey: string | null): readonly [number, number] {
   if (!spriteKey) return [18, 16];
   return SPRITE_DIMENSIONS[spriteKey] ?? DEFAULT_DIMENSION;
