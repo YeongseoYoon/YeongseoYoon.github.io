@@ -32,8 +32,8 @@ export const MOCK_LATENCY_MS = import.meta.env?.MODE === 'test' ? 0 : 260;
 
 /**
  * 운영 콘솔 접근 열쇠 (PRD 7.3 · 6 운영자 역할).
- * 가입 없이 이 기기에서만 콘솔을 열기 위한 패스프레이즈.
+ * 가입 없이 이 브라우저에서만 콘솔을 열기 위한 개발용 패스프레이즈.
  * ⚠️ 클라이언트 사이드 게이트 — 실제 보안이 아니다. 배포 시 서버 인증으로 대체할 것.
  * .env의 VITE_ADMIN_KEY로 재정의 가능.
  */
-export const ADMIN_ACCESS_KEY = import.meta.env?.VITE_ADMIN_KEY ?? 'gorae';
+export const ADMIN_ACCESS_KEY = import.meta.env?.VITE_ADMIN_KEY?.trim() ?? '';

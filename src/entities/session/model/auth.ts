@@ -126,7 +126,7 @@ export function isLocallyUnlocked(): boolean {
 
 export function unlockLocalAdmin(passphrase: string): boolean {
   if (isSupabaseMode) return false;
-  if (passphrase === ADMIN_ACCESS_KEY) {
+  if (ADMIN_ACCESS_KEY && passphrase === ADMIN_ACCESS_KEY) {
     localStorage.setItem(ADMIN_FLAG, '1');
     return true;
   }
