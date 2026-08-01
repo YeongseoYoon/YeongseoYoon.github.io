@@ -10,16 +10,17 @@ interface MyCreatureListProps {
   creatures: Creature[];
   onChanged: () => void;
   onDeleted: (id: string) => void;
+  className?: string;
 }
 
 /** 내 작품 리스트. 한마디 수정·삭제·이동, 반려/숨김은 사유 + 다시 그리기. */
-export function MyCreatureList({ creatures, onChanged, onDeleted }: MyCreatureListProps) {
+export function MyCreatureList({ creatures, onChanged, onDeleted, className }: MyCreatureListProps) {
   const [editing, setEditing] = useState<Creature | null>(null);
 
   return (
     <>
       <div
-        className="mx-5 mt-[18px] flex min-h-0 flex-1 flex-col overflow-y-auto"
+        className={cn('mx-5 mt-[18px] flex min-h-0 flex-1 flex-col overflow-y-auto', className)}
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)' }}
       >
         <span className="mb-1 text-[13px] font-bold">내 작품</span>

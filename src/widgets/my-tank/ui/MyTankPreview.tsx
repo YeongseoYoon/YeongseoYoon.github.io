@@ -1,5 +1,5 @@
 import { CreatureSprite, isAnchoredKind, spriteBaseSize, type Creature } from '@/entities/creature';
-import { assetUrl } from '@/shared/lib';
+import { assetUrl, cn } from '@/shared/lib';
 import { SandFloor } from '@/shared/ui';
 
 /** 미리보기 수조 안의 상대 위치(%) — 화면 폭이 변해도 비율로 유지된다. */
@@ -20,7 +20,15 @@ const FLOOR_SPOTS = [
 ];
 
 /** 내 수조 미리보기 — 내 공개/대기 생물이 함께 헤엄친다. */
-export function MyTankPreview({ creatures, countLabel = '내 생물' }: { creatures: Creature[]; countLabel?: string }) {
+export function MyTankPreview({
+  creatures,
+  countLabel = '내 생물',
+  className,
+}: {
+  creatures: Creature[];
+  countLabel?: string;
+  className?: string;
+}) {
   const swimmers = creatures
     .filter((c) => c.status === 'published' || c.status === 'pending')
     .slice(0, SWIM_SPOTS.length + FLOOR_SPOTS.length);
@@ -28,7 +36,10 @@ export function MyTankPreview({ creatures, countLabel = '내 생물' }: { creatu
   let floorIndex = 0;
 
   return (
-    <div className="water-tank relative mx-5 mt-1.5 aspect-[16/10] max-h-[280px] min-h-[170px] shrink-0 overflow-hidden rounded-[20px]">
+    <div className={cn(
+      'water-tank relative mx-5 mt-1.5 aspect-[16/10] max-h-[280px] min-h-[170px] shrink-0 overflow-hidden rounded-[20px]',
+      className,
+    )}>
       <div
         className="absolute -top-5 left-10 h-[240px] w-[50px] blur-[5px]"
         style={{

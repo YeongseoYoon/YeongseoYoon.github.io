@@ -28,7 +28,7 @@ export function DevPersonaBar() {
           key={n.to}
           to={n.to}
           className={cn(
-            'rounded-full px-3 py-1 font-semibold',
+            'whitespace-nowrap rounded-full px-2.5 py-1 font-semibold sm:px-3',
             pathname === n.to ? 'bg-brand text-white' : 'text-ink-sub hover:bg-black/5',
           )}
         >

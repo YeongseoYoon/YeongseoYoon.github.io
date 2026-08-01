@@ -45,7 +45,7 @@ export function MyTankPage() {
   );
 
   return (
-    <Screen variant="content" className="flex flex-col bg-white">
+    <Screen variant="wide" className="flex flex-col bg-white">
       <div className="h-3 shrink-0" />
       <ScreenHeader
         title="내 수조"
@@ -61,13 +61,22 @@ export function MyTankPage() {
         }
       />
 
-      <MyTankPreview creatures={sorted} />
-      {quota && <ReleaseQuotaBar quota={quota} />}
-      <MyCreatureList
-        creatures={sorted}
-        onChanged={refetch}
-        onDeleted={(id) => setDeletedIds((current) => new Set(current).add(id))}
-      />
+      <div className="flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(360px,2fr)] lg:gap-6 lg:px-6 lg:pb-20">
+        <section className="shrink-0 lg:min-w-0">
+          <MyTankPreview
+            creatures={sorted}
+            className="lg:mx-0 lg:mt-1.5 lg:aspect-[16/9] lg:max-h-[420px]"
+          />
+          {quota && <ReleaseQuotaBar quota={quota} className="lg:mx-0" />}
+        </section>
+
+        <MyCreatureList
+          creatures={sorted}
+          onChanged={refetch}
+          onDeleted={(id) => setDeletedIds((current) => new Set(current).add(id))}
+          className="lg:mx-0 lg:mt-1.5 lg:rounded-[20px] lg:border lg:border-black/[.07] lg:bg-[#fafbfb] lg:px-4 lg:pt-4"
+        />
+      </div>
 
       {sharing && user && (
         <ShareTankSheet
