@@ -12,6 +12,7 @@ interface CreatureDetailSheetProps {
   creature: Creature;
   onClose: () => void;
   onReport: () => void;
+  onShare: () => void;
 }
 
 const BIG_SCALE = 11;
@@ -20,7 +21,7 @@ const BIG_SCALE = 11;
  * 작품 상세 바텀시트 (PRD 7.2 · 7.3).
  * 메시지는 이 시점에 노출된다(상시 텍스트 노출 금지 원칙 — PRD 제품원칙 5).
  */
-export function CreatureDetailSheet({ creature, onClose, onReport }: CreatureDetailSheetProps) {
+export function CreatureDetailSheet({ creature, onClose, onReport, onShare }: CreatureDetailSheetProps) {
   const [baseW, baseH] = spriteBaseSize(creature.spriteKey);
   const author = displayName({ nickname: creature.authorNickname });
   const releasedAt = creature.publishedAt ?? creature.submittedAt ?? creature.createdAt;
@@ -74,13 +75,13 @@ export function CreatureDetailSheet({ creature, onClose, onReport }: CreatureDet
           </p>
         </div>
 
-        <div className="mt-[18px] flex items-center justify-between">
+        <div className="mt-[18px] flex items-center justify-between gap-3">
           <button className="flex items-center gap-1.5 text-[13px] text-ink-faint" onClick={onReport}>
             <Icon name="warning" size={14} />
             신고하기
           </button>
-          <Button variant="secondary" onClick={onClose}>
-            이 자리에서 구경하기
+          <Button variant="primary" onClick={onShare}>
+            <Icon name="share" size={16} /> 공유하기
           </Button>
         </div>
       </div>

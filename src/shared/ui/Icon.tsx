@@ -19,7 +19,10 @@ export type IconName =
   | 'redo'
   | 'plus'
   | 'minus'
-  | 'filter';
+  | 'filter'
+  | 'share'
+  | 'copy'
+  | 'download';
 
 const PATHS: Record<IconName, JSX.Element> = {
   'chevron-right': <path d="m9 6 6 6-6 6" />,
@@ -62,6 +65,14 @@ const PATHS: Record<IconName, JSX.Element> = {
   plus: <path d="M12 5v14M5 12h14" />,
   minus: <path d="M5 12h14" />,
   filter: <path d="M22 3H2l8 9.46V19l4 2v-8.54Z" />,
+  share: (
+    <>
+      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+      <path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" />
+    </>
+  ),
+  copy: <><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>,
+  download: <><path d="M12 3v12m0 0 5-5m-5 5-5-5" /><path d="M5 21h14" /></>,
 };
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {

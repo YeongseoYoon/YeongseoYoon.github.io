@@ -1,0 +1,16 @@
+import { describe, expect, it } from 'vitest';
+import { buildCreatureShareUrl } from '../model/share';
+
+describe('buildCreatureShareUrl', () => {
+  it('builds a deep link that preserves the GitHub Pages base path', () => {
+    expect(buildCreatureShareUrl('fish 1', 'https://example.com/endless-aquarium/')).toBe(
+      'https://example.com/endless-aquarium/?focus=fish+1',
+    );
+  });
+
+  it('replaces an existing focus parameter without dropping other parameters', () => {
+    expect(buildCreatureShareUrl('new-id', 'https://example.com/app/?focus=old&from=friend')).toBe(
+      'https://example.com/app/?focus=new-id&from=friend',
+    );
+  });
+});

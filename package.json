@@ -6,6 +6,7 @@
   "description": "끝없는 수족관 — 공동 창작형 웹 수족관 (MVP)",
   "scripts": {
     "dev": "vite",
+    "assets:share": "node scripts/generate-share-assets.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
@@ -30,6 +31,7 @@
     "autoprefixer": "^10.4.20",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.47",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",

@@ -5,6 +5,7 @@ import { useAsync } from '@/shared/lib';
 import { isSupabaseMode, subscribeToServerChanges } from '@/shared/api';
 import { creatureApi, FLOOR_Y, SWIM_BAND, type Creature } from '@/entities/creature';
 import { ReportModal } from '@/features/report-creature';
+import { ShareCreatureSheet } from '@/features/share-creature';
 import { AquariumMap, useMapViewport, toWorldCreatures, worldWidthFor } from '@/widgets/aquarium-map';
 import { CreatureDetailSheet } from '@/widgets/creature-detail-sheet';
 
@@ -20,6 +21,7 @@ export function ExplorePage() {
 
   const [selected, setSelected] = useState<Creature | null>(null);
   const [reporting, setReporting] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
 
@@ -45,7 +47,8 @@ export function ExplorePage() {
     if (target) {
       focusedOnce.current = focusId;
       viewport.focusOn(target.x + target.w / 2, target.y + target.h / 2, viewport.maxZoom);
-      setToast('내가 방류한 생물이에요');
+      setSelected(target.creature);
+      setToast('공유된 생물을 찾았어요');
     }
   }, [focusId, placed, viewport]);
 
@@ -99,7 +102,7 @@ export function ExplorePage() {
         </Button>
       </div>
 
-      {selected && !reporting && (
+      {selected && !reporting && !sharing && (
         <CreatureDetailSheet
           creature={selected}
           onClose={() => {
@@ -107,7 +110,12 @@ export function ExplorePage() {
             if (focusId) setParams({}, { replace: true });
           }}
           onReport={() => setReporting(true)}
+          onShare={() => setSharing(true)}
         />
+      )}
+
+      {selected && sharing && (
+        <ShareCreatureSheet creature={selected} onClose={() => setSharing(false)} />
       )}
 
       {selected && reporting && (
