@@ -20,7 +20,8 @@ npm run dev        # http://localhost:5173
 | `npm run dev` | 개발 서버 (Vite) |
 | `npm run build` | 타입체크 후 프로덕션 번들 |
 | `npm run lint` | 타입 검사만 (`tsc --noEmit`) |
-| `npm test` | 테스트 (Vitest, 73개) |
+| `npm test` | 테스트 (Vitest) |
+| `npm run assets:share` | OG 대표 이미지 재생성 |
 | `npm run test:watch` | 테스트 감시 모드 |
 | `npm run test:supabase` | 연결된 Supabase에서 인증·RLS·주요 RPC 통합 테스트 |
 
@@ -70,7 +71,7 @@ npm run dev        # http://localhost:5173
 
 | 경로 | 화면 | 설명 |
 | --- | --- | --- |
-| `/` | 수족관 탐험 | **지도형 바다** — 드래그 팬 + 줌(버튼/휠/핀치). 생물이 많아질수록 월드가 넓어지고, **좁게 보면** 생물이 커지며 한마디가 보이고 **넓게 보면** 작아지며 메시지는 숨음. 생물 클릭 → 상세 → 신고. `/?focus=<id>`로 특정 생물 위치로 이동·강조 |
+| `/` | 수족관 탐험 | **지도형 바다** — 드래그 팬 + 줌(버튼/휠/핀치). 생물이 많아질수록 월드가 넓어지고, **좁게 보면** 생물이 커지며 한마디가 보이고 **넓게 보면** 작아지며 메시지는 숨음. 생물 클릭 → 상세 → 신고·공유. `/?focus=<id>`로 특정 생물 위치와 상세 화면을 바로 엶 |
 | `/draw` | 생물 그리기 | 36×32 픽셀 캔버스, 12색 프리셋 **+ 컬러피커**, 브러시/스포이드/지우개, 따라 그리기 **밑그림**, 한마디(30자), "방류하기" |
 | `/my-tank` | 내 수조 | 내 생물 미리보기, **기기/계정당** 일별 방류 한도, 한마디 수정·**삭제**·바다로 이동, 임시저장 이어 그리기, 숨김/반려 시 **원본 불러와 다시 그리기** |
 | `/admin` | 운영 콘솔 | **운영 권한이 있는 신원만** 접근. **신고 큐 중심**(사후 검토) + 검토 대기, 숨김/반려(+사유 기록), 구역 관리 |
@@ -117,6 +118,12 @@ Supabase 연결은 `.env.example`을 `.env.local`로 복사한 뒤 URL과 publis
 
 `main`에 푸시하면 GitHub Actions가 테스트와 프로덕션 빌드를 실행한 뒤 GitHub Pages에 자동 배포합니다. 배포 주소는 `https://yeongseoyoon.github.io/endless-aquarium/`이며, 저장소 Actions secrets에 `VITE_SUPABASE_URL`과 `VITE_SUPABASE_PUBLISHABLE_KEY`가 필요합니다. 프로젝트 하위 경로와 SPA 직접 접속을 지원하도록 Vite base와 `404.html` fallback을 함께 적용합니다.
 
+## 공유
+
+- 모든 페이지에 1200×630 OG 이미지와 Open Graph/Twitter 메타 태그가 있어 카카오톡 등 링크 미리보기에 서비스 대표 카드가 표시됩니다.
+- 생물 상세의 공유 버튼은 `/?focus=<생물 id>` 딥링크를 Web Share API로 전달합니다. 지원하지 않는 브라우저에서는 링크를 복사합니다.
+- 인스타 스토리 버튼은 생물 그림과 메시지를 넣은 1080×1920 PNG를 기기에서 생성합니다. 파일 공유가 가능한 휴대폰에서는 시스템 공유창을 열고, 그렇지 않으면 이미지를 다운로드하고 딥링크를 복사합니다.
+
 ---
 
 ## 앱인토스(Apps in Toss) 전환
@@ -125,12 +132,13 @@ Supabase 연결은 `.env.example`을 `.env.local`로 복사한 뒤 URL과 publis
 
 - `@apps-in-toss/web-framework` 의존성 + [`granite.config.ts`](./granite.config.ts) 포함.
 - 신원은 `entities/session/model/auth.ts`에서 처리합니다. 토스 익명 키 또는 웹 기기 id를 Supabase 익명 세션에 연결하며, 원본 키는 저장하지 않고 SHA-256 해시만 보관합니다.
-- 운영 권한은 클라이언트 환경 변수가 아니라 서버의 `users.role = 'admin'`과 RLS/RPC가 판별합니다.
+- 일반 웹 사용자는 브라우저 프로필별 기기 ID와 Supabase 익명 세션으로 구분됩니다. 다른 기기·브라우저·시크릿 창은 별도 사용자입니다.
+- 운영자는 서버에서 검증하는 하나의 운영자 코드를 각 기기에서 한 번 입력할 수 있습니다. 승인된 세션의 `users.role = 'admin'`과 RLS/RPC가 실제 권한을 판별하며, 코드 원문은 번들이나 DB에 저장하지 않습니다.
 
 ### 배포 전 직접 해야 하는 일 (토스 계정 필요 — 대신 처리 불가)
 
 1. **[앱인토스 콘솔](https://apps-in-toss.toss.im/)에서 앱 등록** → 발급받은 `appName`/아이콘을 `granite.config.ts`에 반영.
-2. **운영자 지정**: 먼저 앱에서 한 번 접속한 뒤 Supabase SQL Editor에서 해당 사용자 UUID의 `users.role`을 `admin`으로 변경하세요. 실제 프로젝트 소유 계정에는 설정 완료했습니다.
+2. **운영자 지정**: `docs/BACKEND.md`에 따라 운영자 코드 해시를 한 번 등록하고, 각 기기의 `/admin`에서 코드를 입력하세요.
 3. **샌드박스 테스트**: `granite.config.ts`의 `web.host`를 기기 IP로 바꾸고, 토스 샌드박스 앱에서 `intoss://endless-aquarium` 딥링크로 실행.
 4. (선택) **전체 로그인/프로필**이 필요하면 `appLogin()`과 별도 서버 토큰 교환을 붙입니다. 현재 MVP는 가입 없는 Supabase 익명 인증을 사용합니다.
 
