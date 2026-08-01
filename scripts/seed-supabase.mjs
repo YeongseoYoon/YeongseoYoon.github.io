@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 import WebSocket from 'ws';
 
 function parseEnv(source) {
@@ -45,81 +47,45 @@ function encodeSprite(pixels, width = 36, height = 32) {
   return `1|${width}|${height}|${palette.join(',')}|${runs.join('-')}`;
 }
 
-function canvas() {
-  return Array(36 * 32).fill(null);
-}
+/** 기존 픽셀 에셋을 사용자 그림 캔버스에 2배 정수 확대해 그대로 옮긴다. */
+async function spriteFromAsset(fileName) {
+  const { data, info } = await sharp(
+    fileURLToPath(new URL(`../public/assets/${fileName}`, import.meta.url)),
+  ).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const scale = 2;
+  const offsetX = Math.floor((36 - info.width * scale) / 2);
+  const offsetY = Math.floor((32 - info.height * scale) / 2);
+  const pixels = Array(36 * 32).fill(null);
 
-function paint(pixels, x, y, color) {
-  if (x >= 0 && x < 36 && y >= 0 && y < 32) pixels[y * 36 + x] = color;
-}
-
-function fish(body, accent) {
-  const pixels = canvas();
-  for (let y = 9; y <= 23; y += 1) {
-    for (let x = 8; x <= 29; x += 1) {
-      if (((x - 19) / 12) ** 2 + ((y - 16) / 8) ** 2 <= 1) paint(pixels, x, y, body);
-    }
-    const tailWidth = Math.max(0, 7 - Math.abs(y - 16));
-    for (let x = 3; x < 3 + tailWidth; x += 1) paint(pixels, x, y, accent);
-  }
-  for (let x = 15; x <= 21; x += 1) paint(pixels, x, 12, accent);
-  paint(pixels, 25, 13, '#ffffff');
-  paint(pixels, 26, 13, '#23242a');
-  return encodeSprite(pixels);
-}
-
-function jelly() {
-  const pixels = canvas();
-  for (let y = 7; y <= 18; y += 1) {
-    for (let x = 8; x <= 27; x += 1) {
-      if (((x - 17.5) / 10.5) ** 2 + ((y - 17) / 11) ** 2 <= 1) {
-        paint(pixels, x, y, y > 15 ? '#8f6ee8' : '#c39cff');
+  for (let sourceY = 0; sourceY < info.height; sourceY += 1) {
+    for (let sourceX = 0; sourceX < info.width; sourceX += 1) {
+      const index = (sourceY * info.width + sourceX) * 4;
+      if (data[index + 3] < 128) continue;
+      const color = `#${[data[index], data[index + 1], data[index + 2]]
+        .map((channel) => channel.toString(16).padStart(2, '0'))
+        .join('')}`;
+      for (let y = 0; y < scale; y += 1) {
+        for (let x = 0; x < scale; x += 1) {
+          pixels[(offsetY + sourceY * scale + y) * 36 + offsetX + sourceX * scale + x] = color;
+        }
       }
     }
   }
-  for (const x of [10, 14, 19, 24]) {
-    for (let y = 18; y <= 27; y += 1) {
-      if ((y + x) % 3 !== 0) paint(pixels, x + Math.round(Math.sin(y) * 1.5), y, '#8f6ee8');
-    }
-  }
-  paint(pixels, 14, 13, '#23242a');
-  paint(pixels, 21, 13, '#23242a');
   return encodeSprite(pixels);
 }
 
-function star() {
-  const pixels = canvas();
-  const rows = [[15, 20], [12, 23], [7, 28], [11, 24], [13, 22], [14, 21], [13, 22], [11, 24], [9, 26]];
-  rows.forEach(([from, to], index) => {
-    for (let x = from; x <= to; x += 1) paint(pixels, x, 6 + index, '#ffd447');
-  });
-  for (let y = 15; y <= 25; y += 1) {
-    const width = Math.max(1, 7 - Math.floor((y - 15) / 2));
-    for (let x = 18 - width; x <= 18 + width; x += 1) paint(pixels, x, y, '#f7b928');
-  }
-  paint(pixels, 15, 13, '#23242a');
-  paint(pixels, 21, 13, '#23242a');
-  return encodeSprite(pixels);
-}
-
-function seaweed() {
-  const pixels = canvas();
-  for (const [baseX, color, phase] of [[10, '#3dbb73', 0], [18, '#69d68d', 2], [26, '#209e67', 4]]) {
-    for (let y = 5; y <= 29; y += 1) {
-      const x = baseX + Math.round(Math.sin((y + phase) / 3) * 2);
-      for (let width = -1; width <= 1; width += 1) paint(pixels, x + width, y, color);
-    }
-  }
-  return encodeSprite(pixels);
-}
-
-const samples = [
-  { kind: 'fish', name: '노을지느러미', message: '오늘도 천천히 헤엄쳐요', sprite: fish('#f8820d', '#ffd05b') },
-  { kind: 'fish', name: '파도콩', message: '파란 물결을 좋아해요', sprite: fish('#2877d4', '#55d6d2') },
-  { kind: 'decoration', name: '소원별', message: '작은 소원 하나 두고 가요', sprite: star() },
-  { kind: 'fish', name: '몽실해파리', message: '둥실둥실 쉬어 가세요', sprite: jelly() },
-  { kind: 'seaweed', name: '초록숨', message: '바다의 숨을 나눠요', sprite: seaweed() },
+const sampleSpecs = [
+  { kind: 'fish', name: '노을지느러미', message: '오늘도 천천히 헤엄쳐요', asset: 'clownfish.png' },
+  { kind: 'fish', name: '파도콩', message: '파란 물결을 좋아해요', asset: 'tang.png' },
+  { kind: 'decoration', name: '소원별', message: '작은 소원 하나 두고 가요', asset: 'star.png' },
+  { kind: 'fish', name: '몽실해파리', message: '둥실둥실 쉬어 가세요', asset: 'jelly.png' },
+  { kind: 'seaweed', name: '초록숨', message: '바다의 숨을 나눠요', asset: 'kelp.png' },
 ];
+
+const samples = await Promise.all(sampleSpecs.map(async (sample) => ({
+  ...sample,
+  sprite: await spriteFromAsset(sample.asset),
+})));
 
 const env = parseEnv(await readFile(new URL('../.env.local', import.meta.url), 'utf8'));
 const makeClient = () => createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {

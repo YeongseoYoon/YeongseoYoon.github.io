@@ -19,6 +19,7 @@ Supabase Dashboard에서 프로젝트를 만든 뒤 Authentication의 Anonymous 
 2. `supabase/migrations/202608010002_function_permissions.sql`
 3. `supabase/migrations/202608010003_release_quota.sql`
 4. `supabase/migrations/202608010004_admin_access.sql`
+5. `supabase/migrations/202608010005_pretty_sample_creatures.sql` (기존 샘플 데이터가 있을 때)
 
 `.env.example`을 `.env.local`로 복사하고 다음 값을 채운다.
 
