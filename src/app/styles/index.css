@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background: #dfe6e9;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+@layer components {
+  /* 픽셀 스프라이트: 저해상도 원본을 선명하게 확대 */
+  .pixel {
+    image-rendering: pixelated;
+    display: block;
+    /* 무한 월드 레이어는 폭이 없어서 preflight의 max-width:100%가 이미지를 0으로 접는다 */
+    max-width: none;
+  }
+  /* 물 배경 그라디언트 (탐험/전체 보기) */
+  .water {
+    background: linear-gradient(
+      180deg,
+      #e2f8fa 0%,
+      #aee9f0 10%,
+      #5ecbd8 38%,
+      #21afbf 66%,
+      #1a97a6 88%,
+      #15828f 100%
+    );
+  }
+  /* 작은 수조 그라디언트 (내 수조/미리보기) */
+  .water-tank {
+    background: linear-gradient(180deg, #d6f4f8 0%, #7fd6e0 40%, #21afbf 85%, #1c95a2 100%);
+  }
+  .sand-floor {
+    background: linear-gradient(180deg, #f0e0b4, #dfc78f);
+  }
+  /* 캔버스 체커보드 */
+  .checker {
+    background: repeating-conic-gradient(#f4f5f6 0% 25%, #ffffff 0% 50%) 0 0 / 38px 38px;
+  }
+  /* 지도 메시지: 좁게 볼 때(.show-msg)만 노출 (PRD 제품원칙 5) */
+  .msg-label {
+    opacity: 0;
+    transition: opacity 0.15s ease-out;
+    pointer-events: none;
+  }
+  .show-msg .msg-label {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
