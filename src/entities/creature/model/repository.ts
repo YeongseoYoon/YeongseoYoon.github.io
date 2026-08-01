@@ -20,6 +20,11 @@ export type CreaturePatch = Partial<
   Omit<Creature, 'id' | 'slot' | 'worldX' | 'worldY' | 'createdAt'>
 >;
 
+export interface PublicCreatureStats {
+  count: number;
+  maxWorldX: number;
+}
+
 /**
  * 작품 저장소 추상 (DIP).
  * 조회는 도메인 질의로 노출해 소비자가 필터 로직을 몰라도 되게 한다.
@@ -29,6 +34,10 @@ export interface CreatureRepository {
   listByZone(zoneId: string, status?: CreatureStatus): Promise<Creature[]>;
   listByAuthor(authorId: string): Promise<Creature[]>;
   listByStatus(status: CreatureStatus): Promise<Creature[]>;
+  /** 공개 바다의 전체 크기 계산용 경량 통계. 스프라이트 본문은 내려받지 않는다. */
+  getPublicStats(): Promise<PublicCreatureStats>;
+  /** 현재 카메라 주변만 조회한다. 대규모 공개 바다의 네트워크 가상화용. */
+  listPublicInWorldRange(minWorldX: number, maxWorldX: number, limit?: number): Promise<Creature[]>;
   listByIds(ids: string[]): Promise<Creature[]>;
   create(input: NewCreatureInput): Promise<Creature>;
   update(id: string, patch: CreaturePatch): Promise<Creature>;

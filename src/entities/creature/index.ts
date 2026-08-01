@@ -4,7 +4,7 @@ export type {
   CreatureStatus,
   MotionKind,
 } from './model/types';
-export type { CreatureRepository, NewCreatureInput } from './model/repository';
+export type { CreatureRepository, NewCreatureInput, PublicCreatureStats } from './model/repository';
 export {
   canTransition,
   nextStatuses,

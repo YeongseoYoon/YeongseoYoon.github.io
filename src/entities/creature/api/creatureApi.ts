@@ -57,6 +57,21 @@ const mockCreatureApi: CreatureRepository = {
     await slotsReady();
     return creatures.list((c) => c.status === status);
   },
+  getPublicStats: async () => {
+    await slotsReady();
+    const published = await creatures.list((c) => c.status === 'published');
+    return {
+      count: published.length,
+      maxWorldX: published.reduce((max, creature) => Math.max(max, creature.worldX), 0),
+    };
+  },
+  listPublicInWorldRange: async (minWorldX, maxWorldX, limit = 300) => {
+    await slotsReady();
+    const published = await creatures.list(
+      (c) => c.status === 'published' && c.worldX >= minWorldX && c.worldX <= maxWorldX,
+    );
+    return published.sort((a, b) => a.worldX - b.worldX).slice(0, limit);
+  },
   listByIds: async (ids) => {
     await slotsReady();
     return creatures.list((c) => ids.includes(c.id) && c.status !== 'deleted');

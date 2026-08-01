@@ -91,6 +91,39 @@ export const supabaseCreatureApi: CreatureRepository = {
         .eq('status', status)
         .order('slot'),
     ),
+  getPublicStats: async () => {
+    const client = getSupabaseClient();
+    const [countResult, edgeResult] = await Promise.all([
+      client
+        .from('creatures')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'published'),
+      client
+        .from('creatures')
+        .select('world_x')
+        .eq('status', 'published')
+        .order('world_x', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    if (countResult.error) throw countResult.error;
+    if (edgeResult.error) throw edgeResult.error;
+    return {
+      count: countResult.count ?? 0,
+      maxWorldX: Number((edgeResult.data as { world_x?: number } | null)?.world_x ?? 0),
+    };
+  },
+  listPublicInWorldRange: (minWorldX, maxWorldX, limit = 300) =>
+    rows(
+      getSupabaseClient()
+        .from('creatures')
+        .select('*')
+        .eq('status', 'published')
+        .gte('world_x', Math.floor(minWorldX))
+        .lte('world_x', Math.ceil(maxWorldX))
+        .order('world_x')
+        .limit(limit),
+    ),
   listByIds: (ids) => {
     if (ids.length === 0) return Promise.resolve([]);
     return rows(
@@ -124,4 +157,3 @@ export const supabaseCreatureApi: CreatureRepository = {
   },
   remove: (id) => rpcVoid('delete_creature', { p_creature_id: id }),
 };
-

@@ -27,6 +27,9 @@ const prefersReduced =
   typeof window !== 'undefined' &&
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
+/** 오래 탐험해도 과거에 지나친 생물의 헤엄 상태가 무한히 쌓이지 않게 한다. */
+const MAX_SWIM_STATES = 800;
+
 /**
  * 헤엄 연출 + 렌더.
  *
@@ -39,6 +42,15 @@ export function SwimField({ visible, onSelect, didDrag, lowDetail }: SwimFieldPr
   const states = useRef<Map<string, SwimState>>(new Map());
   const visibleRef = useRef<WorldCreature[]>(visible);
   visibleRef.current = visible;
+
+  useEffect(() => {
+    if (states.current.size <= MAX_SWIM_STATES) return;
+    const visibleIds = new Set(visible.map((item) => item.creature.id));
+    for (const id of states.current.keys()) {
+      if (states.current.size <= MAX_SWIM_STATES) break;
+      if (!visibleIds.has(id)) states.current.delete(id);
+    }
+  }, [visible]);
 
   /** 앵커 기준 초기 상태 (처음 보이는 순간 생성). */
   function stateFor(p: WorldCreature): SwimState {

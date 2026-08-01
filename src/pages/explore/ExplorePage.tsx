@@ -9,6 +9,11 @@ import { ShareCreatureSheet } from '@/features/share-creature';
 import { AquariumMap, useMapViewport, toWorldCreatures, worldWidthFor } from '@/widgets/aquarium-map';
 import { CreatureDetailSheet } from '@/widgets/creature-detail-sheet';
 
+/** 카메라 이동 중 매 픽셀마다 재조회하지 않도록 범위를 큰 셀에 맞춘다. */
+const QUERY_CELL = 1_600;
+const QUERY_MARGIN = 700;
+const QUERY_LIMIT = 300;
+
 /**
  * 지도형 수족관 탐험 (PRD 7.2 · 9).
  * 하나의 큰 바다를 팬/줌으로 넓게·좁게 본다. 생물이 많아질수록 월드가 넓어진다.
@@ -25,19 +30,54 @@ export function ExplorePage() {
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
 
-  const { data: allPublished, refetch } = useAsync(() => creatureApi.listByStatus('published'), []);
-  useEffect(() => {
-    if (!isSupabaseMode) return;
-    return subscribeToServerChanges(['creatures'], refetch);
-  }, [refetch]);
-  const visible = useMemo(
-    () => (allPublished ?? []).filter((c) => !hiddenIds.has(c.id)),
-    [allPublished, hiddenIds],
+  const { data: publicStats, refetch: refetchStats } = useAsync(
+    () => creatureApi.getPublicStats(),
+    [],
+  );
+  const contentWidth = useMemo(
+    () => worldWidthFor([{ worldX: publicStats?.maxWorldX ?? 0 }]),
+    [publicStats?.maxWorldX],
+  );
+  const viewport = useMapViewport({ contentWidth, contentHeight: SWIM_BAND, floorY: FLOOR_Y });
+
+  const queryRange = useMemo(() => {
+    if (!viewport.size.w || !viewport.zoom) return { min: 0, max: QUERY_CELL * 2 };
+    const left = -viewport.pan.x / viewport.zoom;
+    const right = left + viewport.size.w / viewport.zoom;
+    return {
+      min: Math.floor((left - QUERY_MARGIN) / QUERY_CELL) * QUERY_CELL,
+      max: Math.ceil((right + QUERY_MARGIN) / QUERY_CELL) * QUERY_CELL,
+    };
+  }, [viewport.pan.x, viewport.size.w, viewport.zoom]);
+
+  const { data: nearbyPublished, refetch: refetchNearby } = useAsync(
+    () => creatureApi.listPublicInWorldRange(queryRange.min, queryRange.max, QUERY_LIMIT),
+    [queryRange.min, queryRange.max],
+  );
+  const { data: focusedCreature, refetch: refetchFocused } = useAsync(
+    () => (focusId ? creatureApi.get(focusId) : Promise.resolve(null)),
+    [focusId],
   );
 
-  const contentWidth = useMemo(() => worldWidthFor(visible), [visible]);
+  useEffect(() => {
+    if (!isSupabaseMode) return;
+    return subscribeToServerChanges(['creatures'], () => {
+      refetchStats();
+      refetchNearby();
+      if (focusId) refetchFocused();
+    });
+  }, [focusId, refetchFocused, refetchNearby, refetchStats]);
+
+  const visible = useMemo(
+    () => {
+      const byId = new Map((nearbyPublished ?? []).map((creature) => [creature.id, creature]));
+      if (focusedCreature?.status === 'published') byId.set(focusedCreature.id, focusedCreature);
+      return [...byId.values()].filter((creature) => !hiddenIds.has(creature.id));
+    },
+    [focusedCreature, hiddenIds, nearbyPublished],
+  );
+
   const placed = useMemo(() => toWorldCreatures(visible), [visible]);
-  const viewport = useMapViewport({ contentWidth, contentHeight: SWIM_BAND, floorY: FLOOR_Y });
 
   // "이동하기"로 들어오면 해당 생물 위치(가로)로 확대 이동.
   const focusedOnce = useRef<string | null>(null);
@@ -69,7 +109,9 @@ export function ExplorePage() {
       <div className="absolute inset-x-5 top-6 z-10 flex items-start justify-between">
         <div className="flex flex-col gap-0.5 rounded-2xl bg-white/70 px-3.5 py-2.5 shadow-[0_2px_10px_rgba(9,62,70,.12)] backdrop-blur">
           <span className="text-sm font-bold tracking-tight text-sea-deep">끝없는 바다</span>
-          <span className="text-[11px] text-sea-mid">생물 {visible.length} · 드래그해서 둘러보기</span>
+          <span className="text-[11px] text-sea-mid">
+            생물 {publicStats?.count ?? visible.length} · 드래그해서 둘러보기
+          </span>
         </div>
         <button
           onClick={() => navigate('/my-tank')}
