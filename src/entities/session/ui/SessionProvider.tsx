@@ -4,6 +4,7 @@ import { SessionContext, type SessionValue } from '../model/context';
 import {
   resolveIdentity,
   resolveIsAdmin,
+  claimAdminAccess,
   unlockLocalAdmin,
   lockLocalAdmin,
   type Identity,
@@ -51,11 +52,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [identity, adminTick],
   );
 
-  const unlockAdmin = useCallback((passphrase: string) => {
+  const unlockAdmin = useCallback(async (passphrase: string) => {
+    if (!identity) return false;
+    if (import.meta.env?.VITE_API_MODE === 'supabase') {
+      const next = await claimAdminAccess(passphrase, identity.source);
+      setIdentity(next);
+      return true;
+    }
     const ok = unlockLocalAdmin(passphrase);
     if (ok) setAdminTick((n) => n + 1);
     return ok;
-  }, []);
+  }, [identity]);
 
   const lockAdmin = useCallback(() => {
     lockLocalAdmin();

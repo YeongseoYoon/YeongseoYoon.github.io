@@ -123,6 +123,19 @@ try {
   assert(adminError, 'creator unexpectedly executed an admin operation');
   checks.push('admin-denied');
 
+  const invalidAdmin = await rpc('claim_admin_access', { p_code: `wrong-${runId}` });
+  assert(invalidAdmin?.ok === false, 'invalid admin code was unexpectedly accepted');
+  assert(['invalid', 'not_configured'].includes(invalidAdmin?.error_code), 'unexpected admin code error');
+  checks.push('admin-code-rejected');
+
+  if (process.env.SUPABASE_ADMIN_ACCESS_CODE) {
+    const admin = await rpc('claim_admin_access', {
+      p_code: process.env.SUPABASE_ADMIN_ACCESS_CODE,
+    });
+    assert(admin?.ok === true && admin?.role === 'admin', 'valid admin code was not accepted');
+    checks.push('admin-code-accepted');
+  }
+
   await rpc('delete_creature', { p_creature_id: released.id });
   const { data: deleted, error: deletedError } = await supabase
     .from('creatures')

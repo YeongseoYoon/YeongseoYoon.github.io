@@ -133,6 +133,34 @@ export function unlockLocalAdmin(passphrase: string): boolean {
   return false;
 }
 
+interface AdminAccessResult {
+  ok: boolean;
+  error_code: 'invalid' | 'locked' | 'not_configured' | null;
+  id: string;
+  nickname: string | null;
+  role: 'creator' | 'admin';
+  strikes: number;
+  created_at: string;
+}
+
+/** 서버에서 운영자 코드를 검증하고 현재 익명 세션에 운영 권한을 부여한다. */
+export async function claimAdminAccess(passphrase: string, source: Identity['source']): Promise<Identity> {
+  const result = await rpcOne<AdminAccessResult>('claim_admin_access', { p_code: passphrase });
+  if (!result.ok) {
+    if (result.error_code === 'locked') throw new Error('입력 횟수를 초과했어요. 15분 뒤 다시 시도해 주세요.');
+    if (result.error_code === 'not_configured') throw new Error('서버에 운영자 코드가 아직 설정되지 않았어요.');
+    throw new Error('운영자 코드가 올바르지 않아요.');
+  }
+  return {
+    id: result.id,
+    nickname: result.nickname,
+    source,
+    role: result.role,
+    strikes: result.strikes,
+    createdAt: new Date(result.created_at).getTime(),
+  };
+}
+
 export function lockLocalAdmin(): void {
   localStorage.removeItem(ADMIN_FLAG);
 }

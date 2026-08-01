@@ -12,8 +12,8 @@ export interface SessionValue {
   isAdmin: boolean;
   /** 앱인토스 환경 여부 (로그인 UX 분기용) */
   inToss: boolean;
-  /** 로컬 개발용 운영자 잠금 해제. 성공 시 true. */
-  unlockAdmin: (passphrase: string) => boolean;
+  /** 운영자 코드를 서버(로컬 mock에서는 개발 키)에서 검증한다. */
+  unlockAdmin: (passphrase: string) => Promise<boolean>;
   lockAdmin: () => void;
 }
 

@@ -42,9 +42,18 @@ function AdminGate({ inToss, serverMode }: { inToss: boolean; serverMode: boolea
   const { unlockAdmin, user } = useSession();
   const [pass, setPass] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [unlocking, setUnlocking] = useState(false);
 
-  function handleUnlock() {
-    if (!unlockAdmin(pass)) setError('열쇠가 올바르지 않아요.');
+  async function handleUnlock() {
+    setUnlocking(true);
+    setError(null);
+    try {
+      if (!await unlockAdmin(pass)) setError('운영자 코드가 올바르지 않아요.');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '운영자 권한을 확인하지 못했어요.');
+    } finally {
+      setUnlocking(false);
+    }
   }
 
   return (
@@ -55,12 +64,26 @@ function AdminGate({ inToss, serverMode }: { inToss: boolean; serverMode: boolea
         {serverMode ? (
           <>
             <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">
-              이 계정에는 서버 운영 권한이 없어요. Supabase의 <code className="rounded bg-black/5 px-1">users.role</code>을
-              <code className="rounded bg-black/5 px-1">admin</code>으로 지정해야 합니다.
+              발급받은 운영자 코드를 입력하세요. 서버가 코드를 검증한 뒤 이 기기의 익명 세션에 운영 권한을 부여합니다.
             </p>
-            <div className="mt-3 select-all break-all rounded-lg bg-[#f1f2f3] px-3 py-2 text-[12px] text-ink-sub">
-              {user?.id ?? '(확인 중)'}
+            <div className="mt-4 flex h-11 items-center rounded-lg border border-black/15 px-3">
+              <input
+                type="password"
+                value={pass}
+                onChange={(e) => setPass(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && void handleUnlock()}
+                placeholder="운영자 코드"
+                autoComplete="current-password"
+                className="flex-1 border-none bg-transparent text-sm outline-none"
+              />
             </div>
+            {error && <p className="mt-2 text-[12.5px] text-negative-accessible">{error}</p>}
+            <Button variant="primary" className="mt-4 h-11 w-full rounded-lg" onClick={() => void handleUnlock()} disabled={unlocking || !pass.trim()}>
+              {unlocking ? '확인 중…' : '잠금 해제'}
+            </Button>
+            <p className="mt-3 text-[11.5px] leading-relaxed text-ink-faint">
+              새 기기에서도 같은 코드를 한 번 입력하면 됩니다. 5회 실패하면 15분 동안 잠겨요.
+            </p>
           </>
         ) : inToss ? (
           <>
@@ -83,13 +106,13 @@ function AdminGate({ inToss, serverMode }: { inToss: boolean; serverMode: boolea
                 type="password"
                 value={pass}
                 onChange={(e) => setPass(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                onKeyDown={(e) => e.key === 'Enter' && void handleUnlock()}
                 placeholder="운영자 열쇠"
                 className="flex-1 border-none bg-transparent text-sm outline-none"
               />
             </div>
             {error && <p className="mt-2 text-[12.5px] text-negative-accessible">{error}</p>}
-            <Button variant="primary" className="mt-4 h-11 w-full rounded-lg" onClick={handleUnlock}>
+            <Button variant="primary" className="mt-4 h-11 w-full rounded-lg" onClick={() => void handleUnlock()} disabled={unlocking}>
               잠금 해제
             </Button>
           </>
