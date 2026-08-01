@@ -52,9 +52,6 @@ export function DrawToolbar({ tool, brush, onBrush, onTool, canUndo, canRedo, on
         })}
       </div>
       <div className="flex gap-1">
-        <ToolButton label="스포이드" active={tool === 'eyedropper'} onClick={() => onTool('eyedropper')}>
-          <Icon name="eyedropper" size={16} />
-        </ToolButton>
         {/* 점 단위 지우개 — '전체 지우기'와 구분되도록 지우개 아이콘 사용 */}
         <ToolButton label="지우개" active={tool === 'eraser'} onClick={() => onTool('eraser')}>
           <Icon name="eraser" size={16} />
