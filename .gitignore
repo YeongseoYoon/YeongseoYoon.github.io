@@ -1,0 +1,24 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.*
+!.env.example
+
+# editor / OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# apps in toss build artifacts
+.granite
+
+# 로컬 에이전트/도구 상태 (대화 로그 포함 — 공개 금지)
+.omc/
