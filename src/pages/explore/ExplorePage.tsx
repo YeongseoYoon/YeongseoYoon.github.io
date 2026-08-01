@@ -29,6 +29,7 @@ export function ExplorePage() {
   const [sharing, setSharing] = useState(false);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
+  const rangeCache = useRef(new Map<string, Promise<Creature[]>>());
 
   const { data: publicStats, refetch: refetchStats } = useAsync(
     () => creatureApi.getPublicStats(),
@@ -51,7 +52,23 @@ export function ExplorePage() {
   }, [viewport.pan.x, viewport.size.w, viewport.zoom]);
 
   const { data: nearbyPublished, refetch: refetchNearby } = useAsync(
-    () => creatureApi.listPublicInWorldRange(queryRange.min, queryRange.max, QUERY_LIMIT),
+    () => {
+      const key = `${queryRange.min}:${queryRange.max}`;
+      const cached = rangeCache.current.get(key);
+      if (cached) return cached;
+      const request = creatureApi
+        .listPublicInWorldRange(queryRange.min, queryRange.max, QUERY_LIMIT)
+        .catch((error) => {
+          rangeCache.current.delete(key);
+          throw error;
+        });
+      rangeCache.current.set(key, request);
+      while (rangeCache.current.size > 12) {
+        const oldest = rangeCache.current.keys().next().value;
+        if (oldest) rangeCache.current.delete(oldest);
+      }
+      return request;
+    },
     [queryRange.min, queryRange.max],
   );
   const { data: focusedCreature, refetch: refetchFocused } = useAsync(
@@ -62,6 +79,7 @@ export function ExplorePage() {
   useEffect(() => {
     if (!isSupabaseMode) return;
     return subscribeToServerChanges(['creatures'], () => {
+      rangeCache.current.clear();
       refetchStats();
       refetchNearby();
       if (focusId) refetchFocused();
