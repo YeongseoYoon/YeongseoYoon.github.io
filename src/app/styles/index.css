@@ -45,7 +45,8 @@
   }
   /* 캔버스 체커보드 */
   .checker {
-    background: repeating-conic-gradient(#f4f5f6 0% 25%, #ffffff 0% 50%) 0 0 / 38px 38px;
+    background-image: repeating-conic-gradient(#f4f5f6 0% 25%, #ffffff 0% 50%);
+    background-position: 0 0;
   }
   /* 지도 메시지: 좁게 볼 때(.show-msg)만 노출 (PRD 제품원칙 5) */
   .msg-label {

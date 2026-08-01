@@ -33,7 +33,11 @@ export function PixelCanvas({ pixels, onPaintCell, onStrokeStart, hint, guideSpr
   return (
     <div
       className="checker relative mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-black/10"
-      style={{ aspectRatio: `${CANVAS.width} / ${CANVAS.height}` }}
+      style={{
+        aspectRatio: `${CANVAS.width} / ${CANVAS.height}`,
+        // 체크 한 타일은 2×2셀이다. 백분율로 계산해 어떤 화면 폭에서도 실제 격자와 함께 축소·확대한다.
+        backgroundSize: `${(2 / CANVAS.width) * 100}% ${(2 / CANVAS.height) * 100}%`,
+      }}
     >
       {guideSpriteKey && guideLayout && (
         <img
