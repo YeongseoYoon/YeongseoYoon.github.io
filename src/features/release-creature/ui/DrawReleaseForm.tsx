@@ -95,14 +95,61 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
     }
   }
 
+  const renderActions = (desktop: boolean) => (
+    <div
+      className={cn(
+        'items-center gap-3.5',
+        desktop
+          ? 'hidden rounded-2xl border border-black/[.07] bg-white p-4 shadow-sm lg:flex lg:flex-col'
+          : 'flex shrink-0 border-t border-black/10 px-6 pt-3.5 lg:hidden',
+      )}
+      style={desktop ? undefined : { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 74px)' }}
+    >
+      <MiniTankPreview
+        sprite={draw.spriteCode}
+        kind={draw.kind}
+        name={draw.name}
+        empty={draw.isEmpty}
+        caption="내 수조 미리보기"
+        className={desktop ? 'h-32 w-full' : 'h-16 w-24 shrink-0'}
+      />
+      <div className="flex w-full flex-1 flex-col gap-[7px]">
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            className="h-12 rounded-[10px] px-4"
+            onClick={handleDraft}
+            disabled={busy !== null || draw.isEmpty || !user}
+          >
+            {busy === 'draft' ? '저장 중…' : '임시저장'}
+          </Button>
+          <Button
+            variant="primary"
+            className="h-12 flex-1 rounded-[10px]"
+            onClick={handleRelease}
+            disabled={busy !== null || draw.isEmpty || !user}
+          >
+            {busy === 'release' ? '방류 중…' : '방류하기'}
+          </Button>
+        </div>
+        <span className="text-center text-[11.5px] text-ink-faint">
+          바로 바다에 방류돼요 · 신고가 쌓이면 검토해요
+          {quota.data ? ` · 오늘 ${quota.data.remaining}회 남음` : ''}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-3">
-        <div className="flex shrink-0 justify-center px-6">
+      <div className="flex shrink-0 justify-center px-6 lg:pb-4">
+        <div className="w-full lg:max-w-3xl">
           <KindTabs kind={draw.kind} onChange={draw.setKind} />
         </div>
+      </div>
 
-        <div className="shrink-0 px-6 pt-4">
+      <div className="min-h-0 flex-1 overflow-y-auto pb-3 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(340px,2fr)] lg:gap-6 lg:px-6 lg:pb-20">
+        <section className="min-w-0 shrink-0 px-6 pt-4 lg:px-0 lg:pt-0">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[13px] font-semibold text-ink-sub">
               {KIND_META[draw.kind].label} 그리기
@@ -141,81 +188,43 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
             hint={KIND_META[draw.kind].label + '는 이렇게 움직여요'}
             guideSpriteKey={showGuide ? guideKey : null}
           />
-        </div>
+        </section>
 
-        <div className="shrink-0 px-6 pt-3">
-          <DrawToolbar
-            tool={draw.tool}
-            brush={draw.brush}
-            onBrush={draw.setBrush}
-            onTool={draw.setTool}
-            canUndo={draw.canUndo}
-            canRedo={draw.canRedo}
-            onUndo={draw.undo}
-            onRedo={draw.redo}
-          />
-        </div>
-
-        <div className="shrink-0 px-6 pt-3">
-          <Palette color={draw.color} onSelect={draw.setColor} />
-        </div>
-
-        <div className="shrink-0 px-6 pt-4">
-          <div className="mb-2 flex h-10 items-center rounded-lg border border-black/15 px-3">
-            <input
-              value={draw.name}
-              onChange={(e) => draw.setName(e.target.value)}
-              placeholder="생물 이름"
-              maxLength={12}
-              className="w-full border-none bg-transparent text-[15px] font-semibold outline-none placeholder:text-ink-faint"
+        <aside className="flex min-w-0 shrink-0 flex-col gap-3 px-6 pt-3 lg:rounded-[20px] lg:border lg:border-black/[.07] lg:bg-[#fafbfb] lg:p-4">
+          <div className="shrink-0">
+            <DrawToolbar
+              tool={draw.tool}
+              brush={draw.brush}
+              onBrush={draw.setBrush}
+              onTool={draw.setTool}
+              canUndo={draw.canUndo}
+              canRedo={draw.canRedo}
+              onUndo={draw.undo}
+              onRedo={draw.redo}
             />
           </div>
-          <MessageField value={draw.message} onChange={draw.setMessage} />
-        </div>
-
-        {error && <p className="shrink-0 px-6 pt-2 text-[12.5px] text-negative-accessible">{error}</p>}
-        {notice && !error && (
-          <p className="shrink-0 px-6 pt-2 text-[12.5px] text-brand-accessible">{notice}</p>
-        )}
-      </div>
-
-      <div
-        className="flex shrink-0 items-center gap-3.5 border-t border-black/10 px-6 pt-3.5"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 74px)' }}
-      >
-        <MiniTankPreview
-          sprite={draw.spriteCode}
-          kind={draw.kind}
-          name={draw.name}
-          empty={draw.isEmpty}
-          caption="내 수조 미리보기"
-          className="h-16 w-24 shrink-0"
-        />
-        <div className="flex flex-1 flex-col gap-[7px]">
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              className="h-12 rounded-[10px] px-4"
-              onClick={handleDraft}
-              disabled={busy !== null || draw.isEmpty || !user}
-            >
-              {busy === 'draft' ? '저장 중…' : '임시저장'}
-            </Button>
-            <Button
-              variant="primary"
-              className="h-12 flex-1 rounded-[10px]"
-              onClick={handleRelease}
-              disabled={busy !== null || draw.isEmpty || !user}
-            >
-              {busy === 'release' ? '방류 중…' : '방류하기'}
-            </Button>
+          <div className="shrink-0">
+            <Palette color={draw.color} onSelect={draw.setColor} />
           </div>
-          <span className="text-center text-[11.5px] text-ink-faint">
-            바로 바다에 방류돼요 · 신고가 쌓이면 검토해요
-            {quota.data ? ` · 오늘 ${quota.data.remaining}회 남음` : ''}
-          </span>
-        </div>
+          <div className="shrink-0 pt-1">
+            <div className="mb-2 flex h-10 items-center rounded-lg border border-black/15 bg-white px-3">
+              <input
+                value={draw.name}
+                onChange={(e) => draw.setName(e.target.value)}
+                placeholder="생물 이름"
+                maxLength={12}
+                className="w-full border-none bg-transparent text-[15px] font-semibold outline-none placeholder:text-ink-faint"
+              />
+            </div>
+            <MessageField value={draw.message} onChange={draw.setMessage} />
+          </div>
+          {error && <p className="m-0 shrink-0 text-[12.5px] text-negative-accessible">{error}</p>}
+          {notice && !error && <p className="m-0 shrink-0 text-[12.5px] text-brand-accessible">{notice}</p>}
+          <div className="mt-auto pt-1">{renderActions(true)}</div>
+        </aside>
       </div>
+
+      {renderActions(false)}
     </div>
   );
 }

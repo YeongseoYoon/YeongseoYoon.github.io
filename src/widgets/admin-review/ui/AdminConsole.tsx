@@ -52,7 +52,7 @@ export function AdminConsole() {
       </div>
 
       {/* 탭 */}
-      <div className="flex shrink-0 gap-1 border-b border-black/10 bg-white px-7">
+      <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-black/10 bg-white px-3 sm:px-7">
         <TabButton active={tab === 'review'} onClick={() => { setTab('review'); setSelectedId(null); }} badge={pending.length} badgeTone="brand">
           검토 대기
         </TabButton>
@@ -71,7 +71,10 @@ export function AdminConsole() {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-black/10 bg-white md:border-r">
+          <div className={cn(
+            'min-h-0 flex-1 flex-col overflow-y-auto border-black/10 bg-white md:flex md:border-r',
+            selectedId ? 'hidden' : 'flex',
+          )}>
             <div className="flex items-center justify-between border-b border-black/[.07] px-6 py-3.5">
               <span className="text-[13px] text-ink-soft">
                 {tab === 'review' ? `오래된 순 · ${pending.length}건` : `신고 많은 순 · ${reportGroups.length}건`}
@@ -86,7 +89,7 @@ export function AdminConsole() {
               <QueueRow
                 key={creature.id}
                 creature={creature}
-                selected={selected?.id === creature.id}
+                selected={selectedId === creature.id}
                 onSelect={() => setSelectedId(creature.id)}
               />
             ))}
@@ -100,6 +103,8 @@ export function AdminConsole() {
               logs={logs}
               reports={tab === 'reports' ? selectedReports : undefined}
               onActionDone={handleActionDone}
+              onBack={() => setSelectedId(null)}
+              className={selectedId ? 'flex' : 'hidden md:flex'}
             />
           ) : (
             <div className="hidden w-full shrink-0 place-items-center bg-white text-sm text-ink-faint md:grid md:w-[380px] lg:w-[460px]">
@@ -129,7 +134,7 @@ function TabButton({
     <button
       onClick={onClick}
       className={cn(
-        '-mb-px flex items-center gap-[7px] border-b-2 px-3 py-3.5 text-sm font-semibold',
+        '-mb-px flex shrink-0 items-center gap-[7px] whitespace-nowrap border-b-2 px-3 py-3.5 text-sm font-semibold',
         active ? 'border-brand text-ink' : 'border-transparent text-ink-sub',
       )}
     >

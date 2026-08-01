@@ -1,4 +1,5 @@
-import { formatSubmittedAt } from '@/shared/lib';
+import { cn, formatSubmittedAt } from '@/shared/lib';
+import { Icon } from '@/shared/ui';
 import { CreatureSprite, KindBadge, spriteBaseSize, type Creature } from '@/entities/creature';
 import type { ModerationLog } from '@/entities/moderation-log';
 import { reportReasonLabel, type Report } from '@/entities/report';
@@ -13,6 +14,8 @@ interface ReviewDetailPanelProps {
   /** 신고 큐에서 선택된 경우 누적 신고 목록 */
   reports?: Report[];
   onActionDone: (updated: Creature) => void;
+  onBack?: () => void;
+  className?: string;
 }
 
 /** 우측 상세 패널 — 미리보기 + 메타 + 조치 + 최근 기록 (PRD 7.3). */
@@ -23,11 +26,22 @@ export function ReviewDetailPanel({
   logs,
   reports,
   onActionDone,
+  onBack,
+  className,
 }: ReviewDetailPanelProps) {
   const [w, h] = spriteBaseSize(creature.spriteKey);
 
   return (
-    <div className="flex w-full shrink-0 flex-col overflow-y-auto border-t border-black/10 bg-white md:w-[380px] md:border-t-0 lg:w-[460px]">
+    <div className={cn('w-full shrink-0 flex-col overflow-y-auto border-t border-black/10 bg-white md:w-[380px] md:border-t-0 lg:w-[460px]', className)}>
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="mx-4 mt-3 flex h-10 items-center gap-1 self-start rounded-full px-2 text-[13px] font-semibold text-ink-sub md:hidden"
+        >
+          <Icon name="chevron-left" size={18} /> 신고 목록
+        </button>
+      )}
       <div className="flex flex-col gap-4 px-6 pt-5">
         <div className="water-tank relative h-[170px] overflow-hidden rounded-2xl">
           <div className="absolute inset-0 grid place-items-center">

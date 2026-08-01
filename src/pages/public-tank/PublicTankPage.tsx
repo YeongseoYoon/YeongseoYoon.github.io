@@ -20,7 +20,7 @@ export function PublicTankPage() {
   const ownerName = creatures[0]?.authorNickname ?? '이름 없는 탐험가';
 
   return (
-    <Screen variant="content" className="flex flex-col bg-white">
+    <Screen variant="wide" className="flex flex-col bg-white">
       <div className="h-3 shrink-0" />
       <ScreenHeader title={`${ownerName}의 수족관`} onBack={() => navigate('/')} />
 
@@ -29,9 +29,15 @@ export function PublicTankPage() {
       ) : error ? (
         <p className="px-6 py-16 text-center text-sm text-negative-accessible">수족관을 불러오지 못했어요.</p>
       ) : (
-        <>
-          <MyTankPreview creatures={creatures} countLabel="공개 생물" />
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-28 pt-5">
+        <div className="flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(360px,2fr)] lg:gap-6 lg:px-6 lg:pb-20">
+          <section className="shrink-0 lg:min-w-0">
+            <MyTankPreview
+              creatures={creatures}
+              countLabel="공개 생물"
+              className="lg:mx-0 lg:mt-1.5 lg:aspect-[16/9] lg:max-h-[420px]"
+            />
+          </section>
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-28 pt-5 lg:mt-1.5 lg:rounded-[20px] lg:border lg:border-black/[.07] lg:bg-[#fafbfb] lg:px-4 lg:pt-4">
             <div className="mb-3 flex items-end justify-between">
               <div>
                 <h2 className="m-0 text-lg font-bold">여기 사는 생물들</h2>
@@ -56,7 +62,7 @@ export function PublicTankPage() {
               })}
             </div>
           </div>
-        </>
+        </div>
       )}
 
       <div className="absolute inset-x-5 bottom-5 z-10 flex justify-center">

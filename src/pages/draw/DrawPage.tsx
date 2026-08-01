@@ -20,7 +20,7 @@ export function DrawPage() {
   );
 
   return (
-    <Screen variant="content" className="flex flex-col bg-white">
+    <Screen variant="wide" className="flex flex-col bg-white">
       <div className="h-3 shrink-0" />
       <ScreenHeader
         title={editId ? '생물 다시 그리기' : '생물 그리기'}
