@@ -59,6 +59,7 @@ export function ShareCreatureSheet({ creature, onClose }: ShareCreatureSheetProp
       const blob = await createCreatureStoryCard(creature);
       const file = new File([blob], `${creature.name}-끝없는-수족관.png`, { type: 'image/png' });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        setStatus('공유할 앱을 선택해 주세요.');
         await navigator.share({ files: [file], title: `${creature.name} · 끝없는 수족관`, text });
         setStatus('공유했어요. 링크도 함께 붙이면 친구가 바로 찾아올 수 있어요.');
       } else {
