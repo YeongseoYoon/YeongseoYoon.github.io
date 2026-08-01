@@ -3,6 +3,23 @@ import { CANVAS } from '@/shared/config';
 import { assetUrl } from '@/shared/lib';
 import { getGuideLayout } from '../model/guideLayout';
 
+interface CanvasBounds {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+/** 마우스·손가락 좌표를 동일한 36×32 셀 인덱스로 변환한다. */
+export function pointToCellIndex(clientX: number, clientY: number, bounds: CanvasBounds): number | null {
+  const x = clientX - bounds.left;
+  const y = clientY - bounds.top;
+  if (x < 0 || y < 0 || x >= bounds.width || y >= bounds.height) return null;
+  const col = Math.floor((x / bounds.width) * CANVAS.width);
+  const row = Math.floor((y / bounds.height) * CANVAS.height);
+  return row * CANVAS.width + col;
+}
+
 interface PixelCanvasProps {
   pixels: (string | null)[];
   onPaintCell: (index: number) => void;
@@ -19,15 +36,24 @@ interface PixelCanvasProps {
  */
 export function PixelCanvas({ pixels, onPaintCell, onStrokeStart, hint, guideSpriteKey }: PixelCanvasProps) {
   const drawing = useRef(false);
+  const surfaceRef = useRef<HTMLDivElement>(null);
+  const activePointer = useRef<number | null>(null);
+  const lastPaintedCell = useRef<number | null>(null);
   const guideLayout = guideSpriteKey ? getGuideLayout(guideSpriteKey) : null;
 
   // 캔버스 밖에서 손을 떼도 드로잉이 멈추도록 전역 pointerup 구독.
   useEffect(() => {
     const stop = () => {
       drawing.current = false;
+      activePointer.current = null;
+      lastPaintedCell.current = null;
     };
     window.addEventListener('pointerup', stop);
-    return () => window.removeEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+    return () => {
+      window.removeEventListener('pointerup', stop);
+      window.removeEventListener('pointercancel', stop);
+    };
   }, []);
 
   return (
@@ -54,7 +80,26 @@ export function PixelCanvas({ pixels, onPaintCell, onStrokeStart, hint, guideSpr
         />
       )}
       <div
+        ref={surfaceRef}
         className="relative h-full w-full touch-none"
+        onPointerMove={(event) => {
+          if (!drawing.current || activePointer.current !== event.pointerId) return;
+          event.preventDefault();
+          const index = pointToCellIndex(event.clientX, event.clientY, event.currentTarget.getBoundingClientRect());
+          if (index === null || index === lastPaintedCell.current) return;
+          lastPaintedCell.current = index;
+          onPaintCell(index);
+        }}
+        onPointerUp={() => {
+          drawing.current = false;
+          activePointer.current = null;
+          lastPaintedCell.current = null;
+        }}
+        onPointerCancel={() => {
+          drawing.current = false;
+          activePointer.current = null;
+          lastPaintedCell.current = null;
+        }}
       >
         {pixels.map((color, i) => {
           const col = i % CANVAS.width;
@@ -76,11 +121,11 @@ export function PixelCanvas({ pixels, onPaintCell, onStrokeStart, hint, guideSpr
               onPointerDown={(e) => {
                 e.preventDefault();
                 drawing.current = true;
+                activePointer.current = e.pointerId;
+                lastPaintedCell.current = i;
+                surfaceRef.current?.setPointerCapture?.(e.pointerId);
                 onStrokeStart?.();
                 onPaintCell(i);
-              }}
-              onPointerEnter={() => {
-                if (drawing.current) onPaintCell(i);
               }}
             />
           );
