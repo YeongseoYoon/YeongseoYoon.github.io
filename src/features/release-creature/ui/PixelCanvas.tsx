@@ -58,6 +58,7 @@ export function PixelCanvas({ pixels, onPaintCell, onStrokeStart, hint, guideSpr
 
   return (
     <div
+      data-testid="pixel-canvas"
       className="checker relative mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-black/10"
       style={{
         aspectRatio: `${CANVAS.width} / ${CANVAS.height}`,

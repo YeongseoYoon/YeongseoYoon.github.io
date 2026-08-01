@@ -10,8 +10,7 @@ import { releaseCreature, saveDraft } from '../model/service';
 import { getReleaseQuota } from '../model/quota';
 import { KindTabs } from './KindTabs';
 import { PixelCanvas } from './PixelCanvas';
-import { DrawToolbar } from './DrawToolbar';
-import { Palette } from './Palette';
+import { DrawingControls } from './DrawingControls';
 import { MessageField } from './MessageField';
 import { MiniTankPreview } from './MiniTankPreview';
 import { GuidePicker } from './GuidePicker';
@@ -185,6 +184,19 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
               onChange={(key) => setGuideByKind((current) => ({ ...current, [draw.kind]: key }))}
             />
           )}
+          <DrawingControls
+            variant="mobile"
+            tool={draw.tool}
+            brush={draw.brush}
+            color={draw.color}
+            onBrush={draw.setBrush}
+            onTool={draw.setTool}
+            onColor={draw.setColor}
+            canUndo={draw.canUndo}
+            canRedo={draw.canRedo}
+            onUndo={draw.undo}
+            onRedo={draw.redo}
+          />
           <PixelCanvas
             pixels={draw.pixels}
             onPaintCell={draw.paintCell}
@@ -192,19 +204,19 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
             hint={KIND_META[draw.kind].label + '는 이렇게 움직여요'}
             guideSpriteKey={showGuide ? guideKey : null}
           />
-          <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-black/[.07] bg-[#fafbfb] p-3">
-            <DrawToolbar
-              tool={draw.tool}
-              brush={draw.brush}
-              onBrush={draw.setBrush}
-              onTool={draw.setTool}
-              canUndo={draw.canUndo}
-              canRedo={draw.canRedo}
-              onUndo={draw.undo}
-              onRedo={draw.redo}
-            />
-            <Palette color={draw.color} onSelect={draw.setColor} />
-          </div>
+          <DrawingControls
+            variant="desktop"
+            tool={draw.tool}
+            brush={draw.brush}
+            color={draw.color}
+            onBrush={draw.setBrush}
+            onTool={draw.setTool}
+            onColor={draw.setColor}
+            canUndo={draw.canUndo}
+            canRedo={draw.canRedo}
+            onUndo={draw.undo}
+            onRedo={draw.redo}
+          />
         </section>
 
         <aside className="flex min-w-0 shrink-0 flex-col gap-3 px-6 pt-3 lg:rounded-[20px] lg:border lg:border-black/[.07] lg:bg-[#fafbfb] lg:p-4">
