@@ -30,7 +30,7 @@ jobs:
       - name: Test
         run: npm test
       - name: Build for GitHub Pages
-        run: npm run build -- --base=/endless-aquarium/
+        run: npm run build -- --base=/
         env:
           VITE_API_MODE: supabase
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
