@@ -15,7 +15,7 @@ export async function updateCreatureMessage(id: string, message: string): Promis
 
 /**
  * 창작자 본인 삭제 (PRD 6 · 8.1).
- * 저장소에서 제거한다. 좌표 슬롯은 재사용하지 않으므로 다른 생물 위치는 그대로다.
+ * deleted 상태로 전환한다. 레코드와 좌표 슬롯을 보존해 다른 생물 위치가 변하지 않게 한다.
  */
 export async function deleteMyCreature(id: string, requesterId: string): Promise<void> {
   const creature = await creatureApi.get(id);

@@ -15,6 +15,11 @@ export interface NewCreatureInput {
   zoneId?: string | null;
 }
 
+/** 생성 후 바뀌면 안 되는 식별자·좌표·슬롯·생성 시각을 제외한 수정 입력. */
+export type CreaturePatch = Partial<
+  Omit<Creature, 'id' | 'slot' | 'worldX' | 'worldY' | 'createdAt'>
+>;
+
 /**
  * 작품 저장소 추상 (DIP).
  * 조회는 도메인 질의로 노출해 소비자가 필터 로직을 몰라도 되게 한다.
@@ -26,7 +31,7 @@ export interface CreatureRepository {
   listByStatus(status: CreatureStatus): Promise<Creature[]>;
   listByIds(ids: string[]): Promise<Creature[]>;
   create(input: NewCreatureInput): Promise<Creature>;
-  update(id: string, patch: Partial<Creature>): Promise<Creature>;
+  update(id: string, patch: CreaturePatch): Promise<Creature>;
   /** 창작자 본인 삭제 (되돌리지 않음 — PRD 8.1 deleted) */
   remove(id: string): Promise<void>;
 }

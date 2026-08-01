@@ -25,6 +25,7 @@ describe('작품 수정·삭제', () => {
     const target = (await creatureApi.get(TARGET))!;
     await deleteMyCreature(TARGET, target.authorId);
     expect(await creatureApi.get(TARGET)).toBeNull();
+    expect((await creatureApi.listByStatus('deleted')).find((c) => c.id === TARGET)?.slot).toBe(target.slot);
   });
 
   it('TC-8-5 남의 작품은 삭제할 수 없다', async () => {
@@ -46,5 +47,27 @@ describe('작품 수정·삭제', () => {
       id: c.id, x: c.worldX, y: c.worldY,
     }));
     before.forEach((b) => expect(after).toContainEqual(b));
+  });
+
+  it('TC-8-8 중간 작품 삭제 후 새 작품이 삭제 슬롯을 재사용하지 않는다', async () => {
+    const before = await creatureApi.listByStatus('published');
+    const maxSlot = Math.max(...before.map((creature) => creature.slot));
+    const target = (await creatureApi.get(TARGET))!;
+    await deleteMyCreature(TARGET, target.authorId);
+
+    const created = await creatureApi.create({
+      kind: 'fish',
+      name: '새 물고기',
+      message: '',
+      authorId: target.authorId,
+      authorNickname: null,
+      sprite: null,
+      initialStatus: 'published',
+      zoneId: target.zoneId,
+    });
+
+    expect(created.slot).toBeGreaterThan(maxSlot);
+    expect(created.slot).not.toBe(target.slot);
+    expect(before.some((creature) => creature.worldX === created.worldX && creature.worldY === created.worldY)).toBe(false);
   });
 });

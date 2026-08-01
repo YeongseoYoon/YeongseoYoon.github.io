@@ -45,6 +45,7 @@ function make(spec: SeedSpec, slot: number): Creature {
     spriteKey: spec.spriteKey,
     worldX,
     worldY,
+    slot,
     rejectionReason: spec.rejectionReason ?? null,
     createdAt: submittedAt,
     submittedAt,

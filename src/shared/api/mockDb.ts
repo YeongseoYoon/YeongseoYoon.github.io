@@ -28,6 +28,8 @@ export interface Collection<T extends Identifiable> {
   list(predicate?: (row: T) => boolean): Promise<T[]>;
   find(id: string): Promise<T | null>;
   insert(row: T): Promise<T>;
+  /** 최신 행 스냅샷으로 값을 만든 뒤 한 번에 삽입한다. 동시 할당이 필요한 파생 키에 사용. */
+  insertWith(factory: (rows: readonly T[]) => T): Promise<T>;
   update(id: string, patch: Partial<T>): Promise<T>;
   remove(id: string): Promise<void>;
 }
@@ -76,6 +78,16 @@ class MockDb {
       },
       insert: async (row) => {
         const all = await rows();
+        this.tables[name] = [...all, row];
+        this.persist();
+        return delay(row);
+      },
+      insertWith: async (factory) => {
+        await rows();
+        // hydrate 이후 최신 테이블을 동기적으로 읽고 쓰므로, 동시에 호출되어도
+        // 각 factory는 직전 삽입 결과를 포함한 스냅샷을 받는다.
+        const all = [...((this.tables[name] ?? []) as T[])];
+        const row = factory(all);
         this.tables[name] = [...all, row];
         this.persist();
         return delay(row);

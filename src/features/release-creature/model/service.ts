@@ -16,12 +16,38 @@ export interface ReleaseInput {
   fromDraftId?: string | null;
 }
 
-/** 방류 구역: 신규 방류를 허용하는 구역 중 무작위 (바다 아무 곳에나). */
+/**
+ * 목업 환경의 방류 임계 구역을 직렬화한다.
+ * 후보 확인과 작품 생성 사이에 다른 방류가 끼어 용량을 초과하지 않게 한다.
+ * 실서버에서는 같은 규칙을 DB 트랜잭션으로 옮긴다.
+ */
+let releaseTail: Promise<void> = Promise.resolve();
+
+function serializeRelease<T>(operation: () => Promise<T>): Promise<T> {
+  const result = releaseTail.then(operation, operation);
+  releaseTail = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
+}
+
+/** 방류 구역: 신규 방류를 허용하고 수용량이 남은 구역 중 무작위. */
 async function pickReleaseZoneId(): Promise<string | null> {
   const zones = await zoneApi.list();
-  const pool = zones.filter((z) => z.acceptingReleases);
-  const candidates = pool.length ? pool : zones;
-  if (candidates.length === 0) return null;
+  const openZones = zones.filter((zone) => zone.acceptingReleases);
+  const counts = await Promise.all(
+    openZones.map(async (zone) => ({
+      zone,
+      published: (await creatureApi.listByZone(zone.id, 'published')).length,
+    })),
+  );
+  const candidates = counts
+    .filter(({ zone, published }) => published < zone.capacity)
+    .map(({ zone }) => zone);
+  if (candidates.length === 0) {
+    throw new Error('지금은 방류 가능한 구역이 없어요. 잠시 후 다시 시도해 주세요.');
+  }
   return candidates[Math.floor(Math.random() * candidates.length)].id;
 }
 
@@ -41,38 +67,38 @@ function validate(input: ReleaseInput): string {
  */
 export async function releaseCreature(input: ReleaseInput): Promise<Creature> {
   const name = validate(input);
+  return serializeRelease(async () => {
+    const quota = await getReleaseQuota(input.authorId);
+    if (quota.remaining <= 0) {
+      throw new Error('오늘 방류 한도를 모두 사용했어요. 내일 다시 시도해 주세요.');
+    }
 
-  const quota = await getReleaseQuota(input.authorId);
-  if (quota.remaining <= 0) {
-    throw new Error('오늘 방류 한도를 모두 사용했어요. 내일 다시 시도해 주세요.');
-  }
+    const zoneId = await pickReleaseZoneId();
+    const now = Date.now();
 
-  const zoneId = await pickReleaseZoneId();
-  const now = Date.now();
+    if (input.fromDraftId) {
+      return creatureApi.update(input.fromDraftId, {
+        kind: input.kind,
+        name,
+        message: input.message.trim(),
+        sprite: input.sprite,
+        status: 'published',
+        zoneId,
+        publishedAt: now,
+        submittedAt: now,
+      });
+    }
 
-  // 임시저장본을 방류하는 경우: 좌표를 새로 받기 위해 상태만 바꾸지 않고 갱신한다.
-  if (input.fromDraftId) {
-    return creatureApi.update(input.fromDraftId, {
+    return creatureApi.create({
       kind: input.kind,
       name,
       message: input.message.trim(),
       sprite: input.sprite,
-      status: 'published',
+      authorId: input.authorId,
+      authorNickname: input.authorNickname,
+      initialStatus: 'published',
       zoneId,
-      publishedAt: now,
-      submittedAt: now,
     });
-  }
-
-  return creatureApi.create({
-    kind: input.kind,
-    name,
-    message: input.message.trim(),
-    sprite: input.sprite,
-    authorId: input.authorId,
-    authorNickname: input.authorNickname,
-    initialStatus: 'published',
-    zoneId,
   });
 }
 

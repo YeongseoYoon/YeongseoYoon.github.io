@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { CANVAS, DAILY_RELEASE_LIMIT } from '@/shared/config';
 import { encodeSprite } from '@/shared/lib';
 import { creatureApi } from '@/entities/creature';
+import { zoneApi } from '@/entities/zone';
 import { resetDb } from '@/test/resetDb';
 import { releaseCreature, saveDraft } from '../model/service';
 import { getReleaseQuota } from '../model/quota';
@@ -90,5 +91,58 @@ describe('방류', () => {
     expect(released.status).toBe('published');
     const mine = await creatureApi.listByAuthor(AUTHOR);
     expect(mine).toHaveLength(1);
+  });
+
+  it('TC-4-11 모든 구역이 중지되면 방류를 거부한다', async () => {
+    const zones = await zoneApi.list();
+    await Promise.all(zones.map((zone) => zoneApi.update(zone.id, { acceptingReleases: false })));
+
+    await expect(releaseCreature({ ...base, sprite: drawing() })).rejects.toThrow('방류 가능한 구역');
+  });
+
+  it('TC-4-12 열린 구역이 모두 만석이면 방류를 거부한다', async () => {
+    const zones = await zoneApi.list();
+    const [target, ...closed] = zones;
+    await Promise.all(closed.map((zone) => zoneApi.update(zone.id, { acceptingReleases: false })));
+    const count = (await creatureApi.listByZone(target.id, 'published')).length;
+    await zoneApi.update(target.id, { acceptingReleases: true, capacity: count });
+
+    await expect(releaseCreature({ ...base, sprite: drawing() })).rejects.toThrow('방류 가능한 구역');
+  });
+
+  it('TC-4-13 남은 한 자리로 동시 방류해도 수용량을 넘지 않는다', async () => {
+    const zones = await zoneApi.list();
+    const [target, ...closed] = zones;
+    await Promise.all(closed.map((zone) => zoneApi.update(zone.id, { acceptingReleases: false })));
+    const count = (await creatureApi.listByZone(target.id, 'published')).length;
+    await zoneApi.update(target.id, { acceptingReleases: true, capacity: count + 1 });
+
+    const results = await Promise.allSettled([
+      releaseCreature({ ...base, authorId: 'capacity-a', name: '동시A', sprite: drawing() }),
+      releaseCreature({ ...base, authorId: 'capacity-b', name: '동시B', sprite: drawing() }),
+    ]);
+
+    expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+    expect(results.filter((result) => result.status === 'rejected')).toHaveLength(1);
+    expect(await creatureApi.listByZone(target.id, 'published')).toHaveLength(count + 1);
+  });
+
+  it('TC-12-2 동시 생성된 작품은 모두 고유한 슬롯을 받는다', async () => {
+    const created = await Promise.all(
+      Array.from({ length: 20 }, (_, index) =>
+        creatureApi.create({
+          kind: 'fish',
+          name: `동시 물고기 ${index}`,
+          message: '',
+          authorId: `slot-user-${index}`,
+          authorNickname: null,
+          sprite: drawing(),
+          initialStatus: 'draft',
+        }),
+      ),
+    );
+
+    expect(new Set(created.map((creature) => creature.slot))).toHaveLength(created.length);
+    expect(new Set(created.map((creature) => `${creature.worldX}:${creature.worldY}`))).toHaveLength(created.length);
   });
 });

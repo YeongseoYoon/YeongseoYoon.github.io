@@ -20,7 +20,7 @@ npm run dev        # http://localhost:5173
 | `npm run dev` | 개발 서버 (Vite) |
 | `npm run build` | 타입체크 후 프로덕션 번들 |
 | `npm run lint` | 타입 검사만 (`tsc --noEmit`) |
-| `npm test` | 테스트 (Vitest, 68개) |
+| `npm test` | 테스트 (Vitest, 73개) |
 | `npm run test:watch` | 테스트 감시 모드 |
 
 로컬(앱인토스 밖)에서는 자동으로 **기기 식별 + 목업 데이터**로 동작해, 토스 없이도 전체 흐름을 체험할 수 있습니다. 하단 내비로 화면을 이동하세요.

@@ -47,6 +47,8 @@ export interface Creature {
    */
   worldX: number;
   worldY: number;
+  /** 영구 좌표 배정 번호. 삭제 후에도 보존되며 절대 재사용하지 않는다. */
+  slot: number;
 
   /** 반려/숨김 사유 */
   rejectionReason: string | null;
