@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_API_MODE?: 'mock' | 'supabase';
   readonly VITE_SUPABASE_URL?: string;
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
+  /** 카카오톡 직접 공유용 JavaScript 키 (공개 가능한 플랫폼 키) */
+  readonly VITE_KAKAO_JAVASCRIPT_KEY?: string;
 }
 
 interface ImportMeta {
