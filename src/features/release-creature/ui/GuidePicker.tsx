@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { cn, assetUrl } from '@/shared/lib';
 import { Icon } from '@/shared/ui';
 import type { GuideOption } from '../model/guideLayout';
@@ -12,9 +12,30 @@ interface GuidePickerProps {
 /** 종류별 밑그림을 미리 보고 고르는 가로 스크롤 목록. */
 export function GuidePicker({ options, value, onChange }: GuidePickerProps) {
   const scroller = useRef<HTMLDivElement>(null);
+  const drag = useRef({ pointerId: -1, startX: 0, startScroll: 0, moved: false });
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateEdges = useCallback(() => {
+    const element = scroller.current;
+    if (!element) return;
+    setCanScrollLeft(element.scrollLeft > 2);
+    setCanScrollRight(element.scrollLeft < element.scrollWidth - element.clientWidth - 2);
+  }, []);
+
+  useLayoutEffect(() => {
+    updateEdges();
+    const element = scroller.current;
+    if (!element || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(updateEdges);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [options, updateEdges]);
 
   function scroll(direction: -1 | 1) {
-    scroller.current?.scrollBy({ left: direction * 240, behavior: 'smooth' });
+    const element = scroller.current;
+    if (!element) return;
+    element.scrollBy({ left: direction * Math.max(180, element.clientWidth * 0.72), behavior: 'smooth' });
   }
 
   return (
@@ -23,12 +44,50 @@ export function GuidePicker({ options, value, onChange }: GuidePickerProps) {
         ref={scroller}
         role="radiogroup"
         aria-label="밑그림 선택"
+        onScroll={updateEdges}
+        onPointerDown={(event) => {
+          if (event.button !== 0 || !scroller.current) return;
+          drag.current = {
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startScroll: scroller.current.scrollLeft,
+            moved: false,
+          };
+          event.currentTarget.setPointerCapture?.(event.pointerId);
+        }}
+        onPointerMove={(event) => {
+          if (!scroller.current || drag.current.pointerId !== event.pointerId) return;
+          const distance = event.clientX - drag.current.startX;
+          if (Math.abs(distance) > 5) drag.current.moved = true;
+          if (drag.current.moved) {
+            scroller.current.scrollLeft = drag.current.startScroll - distance;
+            updateEdges();
+          }
+        }}
+        onPointerUp={(event) => {
+          if (drag.current.pointerId !== event.pointerId) return;
+          event.currentTarget.releasePointerCapture?.(event.pointerId);
+          drag.current.pointerId = -1;
+        }}
+        onPointerCancel={() => {
+          drag.current.pointerId = -1;
+          drag.current.moved = false;
+        }}
+        onClickCapture={(event) => {
+          if (!drag.current.moved) return;
+          event.preventDefault();
+          event.stopPropagation();
+          drag.current.moved = false;
+        }}
         onWheel={(event) => {
           if (!scroller.current || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
           event.preventDefault();
           scroller.current.scrollLeft += event.deltaY;
         }}
-        className="flex w-full min-w-0 touch-pan-x gap-1.5 overflow-x-auto overscroll-x-contain pb-1 pr-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={cn(
+          'flex w-full min-w-0 cursor-grab touch-pan-y select-none gap-1.5 overflow-x-auto overscroll-x-contain pb-1 pr-10 [scrollbar-width:none] active:cursor-grabbing [&::-webkit-scrollbar]:hidden',
+          canScrollLeft && 'pl-10',
+        )}
       >
         {options.map((option) => {
           const active = value === option.key;
@@ -59,9 +118,19 @@ export function GuidePicker({ options, value, onChange }: GuidePickerProps) {
       </div>
       <button
         type="button"
+        aria-label="이전 밑그림 보기"
+        onClick={() => scroll(-1)}
+        disabled={!canScrollLeft}
+        className="absolute left-0 top-0 grid h-[54px] w-9 place-items-center rounded-xl border border-black/10 bg-white/95 text-ink-sub shadow-[10px_0_16px_rgba(255,255,255,.95)] disabled:pointer-events-none disabled:opacity-0"
+      >
+        <Icon name="chevron-left" size={18} />
+      </button>
+      <button
+        type="button"
         aria-label="다음 밑그림 보기"
         onClick={() => scroll(1)}
-        className="absolute right-0 top-0 grid h-[54px] w-9 place-items-center rounded-xl border border-black/10 bg-white/95 text-ink-sub shadow-[-10px_0_16px_rgba(255,255,255,.95)]"
+        disabled={!canScrollRight}
+        className="absolute right-0 top-0 grid h-[54px] w-9 place-items-center rounded-xl border border-black/10 bg-white/95 text-ink-sub shadow-[-10px_0_16px_rgba(255,255,255,.95)] disabled:pointer-events-none disabled:opacity-0"
       >
         <Icon name="chevron-right" size={18} />
       </button>

@@ -192,10 +192,7 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
             hint={KIND_META[draw.kind].label + '는 이렇게 움직여요'}
             guideSpriteKey={showGuide ? guideKey : null}
           />
-        </section>
-
-        <aside className="flex min-w-0 shrink-0 flex-col gap-3 px-6 pt-3 lg:rounded-[20px] lg:border lg:border-black/[.07] lg:bg-[#fafbfb] lg:p-4">
-          <div className="shrink-0">
+          <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-black/[.07] bg-[#fafbfb] p-3">
             <DrawToolbar
               tool={draw.tool}
               brush={draw.brush}
@@ -206,10 +203,11 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
               onUndo={draw.undo}
               onRedo={draw.redo}
             />
-          </div>
-          <div className="shrink-0">
             <Palette color={draw.color} onSelect={draw.setColor} />
           </div>
+        </section>
+
+        <aside className="flex min-w-0 shrink-0 flex-col gap-3 px-6 pt-3 lg:rounded-[20px] lg:border lg:border-black/[.07] lg:bg-[#fafbfb] lg:p-4">
           <div className="shrink-0 pt-1">
             <div className="mb-2 flex h-10 items-center rounded-lg border border-black/15 bg-white px-3">
               <input
