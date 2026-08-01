@@ -1,10 +1,38 @@
 import { CANVAS } from '@/shared/config';
+import type { CreatureKind } from '@/entities/creature';
 
-const GUIDE_DIMENSIONS: Record<string, readonly [number, number]> = {
-  clownfish: [14, 6],
-  weed: [6, 12],
-  star: [9, 8],
+export interface GuideOption {
+  key: string;
+  label: string;
+  dimensions: readonly [number, number];
+}
+
+export const GUIDE_OPTIONS_BY_KIND: Record<CreatureKind, readonly GuideOption[]> = {
+  fish: [
+    { key: 'clownfish', label: '흰동가리', dimensions: [14, 6] },
+    { key: 'tang', label: '블루탱', dimensions: [14, 6] },
+    { key: 'lemon', label: '노랑물고기', dimensions: [10, 6] },
+    { key: 'puffer', label: '복어', dimensions: [10, 7] },
+    { key: 'minnow', label: '꼬마물고기', dimensions: [8, 5] },
+    { key: 'jelly', label: '해파리', dimensions: [10, 9] },
+    { key: 'crab', label: '게', dimensions: [12, 7] },
+    { key: 'turtle', label: '거북', dimensions: [14, 5] },
+    { key: 'seahorse', label: '해마', dimensions: [6, 13] },
+    { key: 'axolotl', label: '우파루파', dimensions: [12, 8] },
+  ],
+  seaweed: [
+    { key: 'weed', label: '해초', dimensions: [6, 12] },
+    { key: 'kelp', label: '다시마', dimensions: [6, 10] },
+  ],
+  decoration: [
+    { key: 'star', label: '불가사리', dimensions: [9, 8] },
+    { key: 'coral', label: '산호', dimensions: [10, 8] },
+  ],
 };
+
+const GUIDE_DIMENSIONS = Object.fromEntries(
+  Object.values(GUIDE_OPTIONS_BY_KIND).flat().map((option) => [option.key, option.dimensions]),
+) as Record<string, readonly [number, number]>;
 
 const GUIDE_SCALE = 2;
 

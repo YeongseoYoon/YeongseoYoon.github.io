@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CANVAS } from '@/shared/config';
-import { getGuideLayout } from '../model/guideLayout';
+import { getGuideLayout, GUIDE_OPTIONS_BY_KIND } from '../model/guideLayout';
 
 describe('getGuideLayout', () => {
   it.each([
@@ -12,7 +12,9 @@ describe('getGuideLayout', () => {
   });
 
   it('모든 밑그림이 캔버스 안의 정수 셀만 차지한다', () => {
-    for (const key of ['clownfish', 'weed', 'star']) {
+    const keys = Object.values(GUIDE_OPTIONS_BY_KIND).flat().map((option) => option.key);
+    expect(keys).toHaveLength(14);
+    for (const key of keys) {
       const layout = getGuideLayout(key)!;
       expect(Object.values(layout).every(Number.isInteger)).toBe(true);
       expect(layout.left).toBeGreaterThanOrEqual(0);

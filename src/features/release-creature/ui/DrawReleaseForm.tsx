@@ -4,6 +4,7 @@ import { cn, useAsync } from '@/shared/lib';
 import { KIND_META, type Creature, type CreatureKind } from '@/entities/creature';
 import { useSession } from '@/entities/session';
 import { useDrawing } from '../model/useDrawing';
+import { GUIDE_OPTIONS_BY_KIND } from '../model/guideLayout';
 import { releaseCreature, saveDraft } from '../model/service';
 import { getReleaseQuota } from '../model/quota';
 import { KindTabs } from './KindTabs';
@@ -12,6 +13,7 @@ import { DrawToolbar } from './DrawToolbar';
 import { Palette } from './Palette';
 import { MessageField } from './MessageField';
 import { MiniTankPreview } from './MiniTankPreview';
+import { GuidePicker } from './GuidePicker';
 
 interface DrawReleaseFormProps {
   /** 이어 그릴 원본 (반려·숨김 후 재작업, 임시저장 복구) */
@@ -20,11 +22,10 @@ interface DrawReleaseFormProps {
   onDraftSaved?: () => void;
 }
 
-/** 종류별 참고 밑그림 (따라 그리기용). */
-const GUIDE_BY_KIND: Record<CreatureKind, string> = {
-  fish: 'clownfish',
-  seaweed: 'weed',
-  decoration: 'star',
+const DEFAULT_GUIDE_BY_KIND: Record<CreatureKind, string> = {
+  fish: GUIDE_OPTIONS_BY_KIND.fish[0].key,
+  seaweed: GUIDE_OPTIONS_BY_KIND.seaweed[0].key,
+  decoration: GUIDE_OPTIONS_BY_KIND.decoration[0].key,
 };
 
 /** "생물 그리기" 화면 본문 (PRD 7.1). 상태(useDrawing) + 유스케이스 조립. */
@@ -37,6 +38,7 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
     sprite: source?.sprite,
   });
   const [showGuide, setShowGuide] = useState(true);
+  const [guideByKind, setGuideByKind] = useState(DEFAULT_GUIDE_BY_KIND);
   const [busy, setBusy] = useState<'release' | 'draft' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
   );
 
   const isDraftSource = source?.status === 'draft';
+  const guideKey = guideByKind[draw.kind];
 
   async function handleRelease() {
     if (!user) return;
@@ -120,16 +123,23 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
                   showGuide ? 'bg-brand-bg text-brand-accessible' : 'bg-black/[.05] text-ink-sub',
                 )}
               >
-                밑그림 {showGuide ? '켜짐' : '꺼짐'}
+                {showGuide ? '밑그림 숨기기' : '밑그림 보기'}
               </button>
             </div>
           </div>
+          {showGuide && (
+            <GuidePicker
+              options={GUIDE_OPTIONS_BY_KIND[draw.kind]}
+              value={guideKey}
+              onChange={(key) => setGuideByKind((current) => ({ ...current, [draw.kind]: key }))}
+            />
+          )}
           <PixelCanvas
             pixels={draw.pixels}
             onPaintCell={draw.paintCell}
             onStrokeStart={draw.beginStroke}
             hint={KIND_META[draw.kind].label + '는 이렇게 움직여요'}
-            guideSpriteKey={showGuide ? GUIDE_BY_KIND[draw.kind] : null}
+            guideSpriteKey={showGuide ? guideKey : null}
           />
         </div>
 
