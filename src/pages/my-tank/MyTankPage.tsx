@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, Screen, ScreenHeader } from '@/shared/ui';
 import { useAsync } from '@/shared/lib';
@@ -6,12 +6,15 @@ import { isSupabaseMode, subscribeToServerChanges } from '@/shared/api';
 import { creatureApi, type Creature } from '@/entities/creature';
 import { useSession } from '@/entities/session';
 import { getReleaseQuota } from '@/features/release-creature';
+import { ShareTankSheet } from '@/features/share-creature';
 import { MyCreatureList, MyTankPreview, ReleaseQuotaBar } from '@/widgets/my-tank';
 
 /** 내 수조 (PRD 7·10). 내 생물·방류 상태 확인, 반려 사유 확인 후 재제출. */
 export function MyTankPage() {
   const navigate = useNavigate();
   const { user } = useSession();
+  const [sharing, setSharing] = useState(false);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
   const { data: creatures, refetch } = useAsync(
     () => (user ? creatureApi.listByAuthor(user.id) : Promise.resolve<Creature[]>([])),
@@ -31,8 +34,14 @@ export function MyTankPage() {
   }, [refetch, refetchQuota]);
 
   const sorted = useMemo(
-    () => [...(creatures ?? [])].sort((a, b) => b.createdAt - a.createdAt),
-    [creatures],
+    () => [...(creatures ?? [])]
+      .filter((creature) => creature.status !== 'deleted' && !deletedIds.has(creature.id))
+      .sort((a, b) => b.createdAt - a.createdAt),
+    [creatures, deletedIds],
+  );
+  const publicCreatures = useMemo(
+    () => sorted.filter((creature) => creature.status === 'published'),
+    [sorted],
   );
 
   return (
@@ -42,15 +51,32 @@ export function MyTankPage() {
         title="내 수조"
         onBack={() => navigate('/')}
         action={
-          <button className="p-2 text-ink-sub" aria-label="설정">
-            <Icon name="settings" size={19} />
+          <button
+            className="flex items-center gap-1 rounded-full bg-brand-bg px-2.5 py-1.5 text-[12px] font-semibold text-brand-accessible"
+            aria-label="내 수족관 공유하기"
+            onClick={() => setSharing(true)}
+          >
+            <Icon name="share" size={15} /> 공유
           </button>
         }
       />
 
       <MyTankPreview creatures={sorted} />
       {quota && <ReleaseQuotaBar quota={quota} />}
-      <MyCreatureList creatures={sorted} onChanged={refetch} />
+      <MyCreatureList
+        creatures={sorted}
+        onChanged={refetch}
+        onDeleted={(id) => setDeletedIds((current) => new Set(current).add(id))}
+      />
+
+      {sharing && user && (
+        <ShareTankSheet
+          authorId={user.id}
+          ownerName={user.nickname ?? '나'}
+          creatures={publicCreatures}
+          onClose={() => setSharing(false)}
+        />
+      )}
     </Screen>
   );
 }

@@ -9,10 +9,11 @@ import { EditMessageSheet, deleteMyCreature } from '@/features/edit-creature';
 interface MyCreatureListProps {
   creatures: Creature[];
   onChanged: () => void;
+  onDeleted: (id: string) => void;
 }
 
 /** 내 작품 리스트. 한마디 수정·삭제·이동, 반려/숨김은 사유 + 다시 그리기. */
-export function MyCreatureList({ creatures, onChanged }: MyCreatureListProps) {
+export function MyCreatureList({ creatures, onChanged, onDeleted }: MyCreatureListProps) {
   const [editing, setEditing] = useState<Creature | null>(null);
 
   return (
@@ -31,6 +32,7 @@ export function MyCreatureList({ creatures, onChanged }: MyCreatureListProps) {
             creature={c}
             onEdit={() => setEditing(c)}
             onChanged={onChanged}
+            onDeleted={onDeleted}
           />
         ))}
       </div>
@@ -53,10 +55,12 @@ function MyCreatureListItem({
   creature,
   onEdit,
   onChanged,
+  onDeleted,
 }: {
   creature: Creature;
   onEdit: () => void;
   onChanged: () => void;
+  onDeleted: (id: string) => void;
 }) {
   const navigate = useNavigate();
   const { user } = useSession();
@@ -73,6 +77,7 @@ function MyCreatureListItem({
     setDeleting(true);
     try {
       await deleteMyCreature(creature.id, user.id);
+      onDeleted(creature.id);
       onChanged();
     } finally {
       setDeleting(false);

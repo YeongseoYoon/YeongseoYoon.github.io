@@ -1,5 +1,5 @@
 import { createBrowserRouter, redirect } from 'react-router-dom';
-import { ExplorePage, DrawPage, MyTankPage, AdminPage } from '@/pages';
+import { ExplorePage, DrawPage, MyTankPage, PublicTankPage, AdminPage } from '@/pages';
 import { RootLayout } from '../ui/RootLayout';
 
 /** 라우트 정의. RootLayout 아래에 각 화면(pages)이 매핑된다. */
@@ -20,6 +20,7 @@ export const router = createBrowserRouter(
         { index: true, element: <ExplorePage /> },
         { path: 'draw', element: <DrawPage /> },
         { path: 'my-tank', element: <MyTankPage /> },
+        { path: 'tank/:authorId', element: <PublicTankPage /> },
         { path: 'admin', element: <AdminPage /> },
       ],
     },

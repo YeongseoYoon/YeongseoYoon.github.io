@@ -1,2 +1,8 @@
 export { ShareCreatureSheet } from './ui/ShareCreatureSheet';
-export { buildCreatureShareUrl, createCreatureStoryCard } from './model/share';
+export { ShareTankSheet } from './ui/ShareTankSheet';
+export {
+  buildCreatureShareUrl,
+  buildTankShareUrl,
+  createCreatureStoryCard,
+  createTankStoryCard,
+} from './model/share';
