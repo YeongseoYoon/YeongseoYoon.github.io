@@ -85,6 +85,8 @@ describe('모바일 그리기 도구', () => {
     expect(within(dialog).getByPlaceholderText('생물 이름을 붙여주세요')).toBeTruthy();
     expect(within(dialog).getByPlaceholderText('같이 헤엄칠 사람 구해요')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: '생물 소개 닫기' })).toHaveLength(1);
+    expect(within(dialog).queryByRole('button', { name: '임시저장' })).toBeNull();
+    expect(within(dialog).getByRole('button', { name: '방류하기' })).toBeTruthy();
 
     fireEvent.click(within(dialog).getByRole('button', { name: '생물 소개 닫기' }));
     expect(screen.queryByRole('dialog', { name: '생물 소개하기' })).toBeNull();
@@ -99,6 +101,14 @@ describe('모바일 그리기 도구', () => {
     expect(props.onTool).toHaveBeenCalledWith('eraser');
     expect(props.onColor).toHaveBeenCalledWith(DRAW_PALETTE[1]);
     expect(props.onTool).toHaveBeenLastCalledWith('brush');
+  });
+
+  it('임시저장은 마지막 방류 단계가 아니라 팔레트 옆에서 실행한다', () => {
+    const onDraft = vi.fn();
+    renderControls({ onDraft, draftDisabled: false });
+
+    fireEvent.click(screen.getByRole('button', { name: '임시저장' }));
+    expect(onDraft).toHaveBeenCalledTimes(1);
   });
 
   it('지우개를 다시 누르면 펜으로 돌아가고 지우개 촉 두께만 변경한다', () => {

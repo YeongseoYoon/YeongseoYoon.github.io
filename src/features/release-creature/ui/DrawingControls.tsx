@@ -16,6 +16,9 @@ interface DrawingControlsProps {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
+  onDraft?: () => void;
+  draftDisabled?: boolean;
+  draftBusy?: boolean;
 }
 
 /**
@@ -34,6 +37,9 @@ export function DrawingControls({
   canRedo,
   onUndo,
   onRedo,
+  onDraft,
+  draftDisabled = false,
+  draftBusy = false,
 }: DrawingControlsProps) {
   const mobile = variant === 'mobile';
 
@@ -58,13 +64,27 @@ export function DrawingControls({
         onUndo={onUndo}
         onRedo={onRedo}
       />
-      <Palette
-        color={color}
-        onSelect={(nextColor) => {
-          onColor(nextColor);
-          onTool('brush');
-        }}
-      />
+      <div className="flex items-end gap-2">
+        <div className="min-w-0 flex-1">
+          <Palette
+            color={color}
+            onSelect={(nextColor) => {
+              onColor(nextColor);
+              onTool('brush');
+            }}
+          />
+        </div>
+        {onDraft && (
+          <button
+            type="button"
+            onClick={onDraft}
+            disabled={draftDisabled}
+            className="h-[54px] min-w-[64px] shrink-0 rounded-xl border border-black/10 bg-white px-2 text-[11px] font-bold leading-tight text-ink-sub shadow-sm disabled:opacity-35"
+          >
+            {draftBusy ? '저장 중…' : '임시저장'}
+          </button>
+        )}
+      </div>
     </section>
   );
 }

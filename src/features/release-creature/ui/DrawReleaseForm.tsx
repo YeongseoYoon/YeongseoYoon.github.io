@@ -56,6 +56,7 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
     if (!user) return;
     setBusy('release');
     setError(null);
+    setNotice(null);
     try {
       const creature = await releaseCreature({
         kind: draw.kind,
@@ -77,6 +78,7 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
     if (!user) return;
     setBusy('draft');
     setError(null);
+    setNotice(null);
     try {
       await saveDraft({
         kind: draw.kind,
@@ -107,24 +109,14 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
         className={desktop ? 'h-32 w-full' : 'h-24 w-full shrink-0'}
       />
       <div className="flex w-full flex-1 flex-col gap-[7px]">
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            className="h-12 rounded-[10px] px-4"
-            onClick={handleDraft}
-            disabled={busy !== null || draw.isEmpty || !user}
-          >
-            {busy === 'draft' ? '저장 중…' : '임시저장'}
-          </Button>
-          <Button
-            variant="primary"
-            className="h-12 flex-1 rounded-[10px]"
-            onClick={handleRelease}
-            disabled={busy !== null || draw.isEmpty || !user}
-          >
-            {busy === 'release' ? '방류 중…' : '방류하기'}
-          </Button>
-        </div>
+        <Button
+          variant="primary"
+          className="h-12 w-full rounded-[10px]"
+          onClick={handleRelease}
+          disabled={busy !== null || draw.isEmpty || !user}
+        >
+          {busy === 'release' ? '방류 중…' : '방류하기'}
+        </Button>
         <span className="text-center text-[11.5px] text-ink-faint">
           바로 바다에 방류돼요 · 신고가 쌓이면 검토해요
           {quota.data ? ` · 오늘 ${quota.data.remaining}회 남음` : ''}
@@ -208,7 +200,16 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
             canRedo={draw.canRedo}
             onUndo={draw.undo}
             onRedo={draw.redo}
+            onDraft={handleDraft}
+            draftDisabled={busy !== null || draw.isEmpty || !user}
+            draftBusy={busy === 'draft'}
           />
+          {error && !showMobileDetails && (
+            <p className="mb-3 text-[12.5px] text-negative-accessible lg:hidden">{error}</p>
+          )}
+          {notice && !error && (
+            <p className="mb-3 text-[12.5px] font-semibold text-brand-accessible lg:hidden">{notice}</p>
+          )}
           <PixelCanvas
             pixels={draw.pixels}
             onPaintCell={draw.paintCell}
@@ -228,6 +229,9 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
             canRedo={draw.canRedo}
             onUndo={draw.undo}
             onRedo={draw.redo}
+            onDraft={handleDraft}
+            draftDisabled={busy !== null || draw.isEmpty || !user}
+            draftBusy={busy === 'draft'}
           />
         </section>
 
