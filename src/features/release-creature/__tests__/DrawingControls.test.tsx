@@ -50,6 +50,40 @@ describe('모바일 그리기 도구', () => {
 
     expect(mobile.compareDocumentPosition(canvas) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(canvas.compareDocumentPosition(desktop) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(canvas.className).toContain('100dvh');
+  });
+
+  it('모바일 밑그림 목록은 필요할 때만 시트로 열고 선택하면 캔버스로 돌아온다', async () => {
+    const session: SessionValue = {
+      user: null,
+      loading: false,
+      error: null,
+      isAdmin: false,
+      inToss: false,
+      unlockAdmin: async () => false,
+      lockAdmin: () => undefined,
+    };
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <SessionContext.Provider value={session}>
+          <DrawReleaseForm onReleased={() => undefined} />
+        </SessionContext.Provider>
+      </MemoryRouter>,
+    );
+
+    const trigger = await screen.findByRole('button', { name: '밑그림 변경, 현재 흰동가리' });
+    expect(screen.queryByRole('dialog', { name: '밑그림 고르기' })).toBeNull();
+
+    fireEvent.click(trigger);
+    const dialog = screen.getByRole('dialog', { name: '밑그림 고르기' });
+    fireEvent.click(within(dialog).getByRole('radio', { name: '블루탱' }));
+
+    expect(screen.queryByRole('dialog', { name: '밑그림 고르기' })).toBeNull();
+    expect(screen.getByRole('button', { name: '밑그림 변경, 현재 블루탱' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: '밑그림 변경, 현재 블루탱' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: '밑그림 고르기' })).getByRole('button', { name: '밑그림 없이 그리기' }));
+    expect(screen.getByRole('button', { name: '밑그림 변경, 현재 숨김' })).toBeTruthy();
   });
 
   it('스크롤해도 캔버스 위에 남는 모바일 전용 패널이다', () => {

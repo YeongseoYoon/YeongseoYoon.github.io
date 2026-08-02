@@ -43,6 +43,7 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
+  const [showMobileGuides, setShowMobileGuides] = useState(false);
 
   const quota = useAsync(
     () => (user ? getReleaseQuota(user.id) : Promise.resolve(null)),
@@ -51,6 +52,7 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
 
   const isDraftSource = source?.status === 'draft';
   const guideKey = guideByKind[draw.kind];
+  const selectedGuide = GUIDE_OPTIONS_BY_KIND[draw.kind].find((option) => option.key === guideKey);
 
   async function handleRelease() {
     if (!user) return;
@@ -156,7 +158,7 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto pb-3 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(340px,2fr)] lg:gap-6 lg:px-6 lg:pb-20">
-        <section className="min-w-0 shrink-0 px-6 pt-4 lg:px-0 lg:pt-0">
+        <section className="min-w-0 shrink-0 px-6 pt-2.5 lg:px-0 lg:pt-0">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[13px] font-semibold text-ink-sub">
               {KIND_META[draw.kind].label} 그리기
@@ -173,20 +175,30 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
                 type="button"
                 onClick={() => setShowGuide((v) => !v)}
                 className={cn(
-                  'rounded-full px-2.5 py-1 text-[12px] font-semibold',
+                  'hidden rounded-full px-2.5 py-1 text-[12px] font-semibold lg:block',
                   showGuide ? 'bg-brand-bg text-brand-accessible' : 'bg-black/[.05] text-ink-sub',
                 )}
               >
                 {showGuide ? '밑그림 숨기기' : '밑그림 보기'}
               </button>
+              <button
+                type="button"
+                aria-label={`밑그림 변경, 현재 ${showGuide ? selectedGuide?.label : '숨김'}`}
+                onClick={() => setShowMobileGuides(true)}
+                className="rounded-full bg-brand-bg px-2.5 py-1 text-[12px] font-semibold text-brand-accessible lg:hidden"
+              >
+                밑그림 · {showGuide ? selectedGuide?.label : '숨김'}
+              </button>
             </div>
           </div>
           {showGuide && (
-            <GuidePicker
-              options={GUIDE_OPTIONS_BY_KIND[draw.kind]}
-              value={guideKey}
-              onChange={(key) => setGuideByKind((current) => ({ ...current, [draw.kind]: key }))}
-            />
+            <div className="hidden lg:block">
+              <GuidePicker
+                options={GUIDE_OPTIONS_BY_KIND[draw.kind]}
+                value={guideKey}
+                onChange={(key) => setGuideByKind((current) => ({ ...current, [draw.kind]: key }))}
+              />
+            </div>
           )}
           <DrawingControls
             variant="mobile"
@@ -313,6 +325,59 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
             <div className="mt-4 flex flex-col items-center gap-3.5 rounded-2xl border border-black/[.07] bg-[#fafbfb] p-4">
               {renderActionContent(false)}
             </div>
+          </section>
+        </div>
+      )}
+
+      {showMobileGuides && (
+        <div className="absolute inset-0 z-[60] flex items-end bg-black/35 lg:hidden">
+          <button
+            type="button"
+            aria-hidden="true"
+            tabIndex={-1}
+            className="absolute inset-0"
+            onClick={() => setShowMobileGuides(false)}
+          />
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-guides-title"
+            className="relative z-10 w-full rounded-t-3xl bg-white px-6 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] pt-3 shadow-[0_-16px_48px_rgba(4,34,40,.28)]"
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-black/15" />
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="mb-1 text-[11px] font-bold text-brand-accessible">선택 사항</p>
+                <h2 id="mobile-guides-title" className="text-lg font-bold text-ink">밑그림 고르기</h2>
+              </div>
+              <button
+                type="button"
+                aria-label="밑그림 선택 닫기"
+                onClick={() => setShowMobileGuides(false)}
+                className="grid h-10 w-10 place-items-center rounded-full bg-black/[.05] text-ink-sub"
+              >
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            <GuidePicker
+              options={GUIDE_OPTIONS_BY_KIND[draw.kind]}
+              value={guideKey}
+              onChange={(key) => {
+                setGuideByKind((current) => ({ ...current, [draw.kind]: key }));
+                setShowGuide(true);
+                setShowMobileGuides(false);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setShowGuide(false);
+                setShowMobileGuides(false);
+              }}
+              className="mt-2 h-11 w-full rounded-xl bg-black/[.05] text-sm font-semibold text-ink-sub"
+            >
+              밑그림 없이 그리기
+            </button>
           </section>
         </div>
       )}
