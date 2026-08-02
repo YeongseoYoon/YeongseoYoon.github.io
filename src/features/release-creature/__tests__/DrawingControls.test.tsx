@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { DRAW_PALETTE } from '@/shared/config';
@@ -59,6 +59,36 @@ describe('모바일 그리기 도구', () => {
     expect(panel.className).toContain('sticky');
     expect(panel.className).toContain('top-0');
     expect(panel.className).toContain('lg:hidden');
+  });
+
+  it('모바일에서는 다음 단계를 누르면 이름과 한마디를 시트에서 입력하고 닫을 수 있다', async () => {
+    const session: SessionValue = {
+      user: null,
+      loading: false,
+      error: null,
+      isAdmin: false,
+      inToss: false,
+      unlockAdmin: async () => false,
+      lockAdmin: () => undefined,
+    };
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <SessionContext.Provider value={session}>
+          <DrawReleaseForm onReleased={() => undefined} />
+        </SessionContext.Provider>
+      </MemoryRouter>,
+    );
+
+    const next = await screen.findByRole('button', { name: '다음: 이름과 한마디' });
+    fireEvent.click(next);
+    const dialog = screen.getByRole('dialog', { name: '생물 소개하기' });
+    expect(within(dialog).getByPlaceholderText('생물 이름을 붙여주세요')).toBeTruthy();
+    expect(within(dialog).getByPlaceholderText('같이 헤엄칠 사람 구해요')).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: '생물 소개 닫기' })).toHaveLength(1);
+
+    fireEvent.click(within(dialog).getByRole('button', { name: '생물 소개 닫기' }));
+    expect(screen.queryByRole('dialog', { name: '생물 소개하기' })).toBeNull();
+    expect(screen.getByTestId('desktop-details-panel').className).toContain('hidden');
   });
 
   it('지우개와 펜 색을 패널에서 바로 바꿀 수 있다', () => {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/shared/ui';
+import { Button, Icon } from '@/shared/ui';
 import { cn, useAsync } from '@/shared/lib';
 import { KIND_META, type Creature, type CreatureKind } from '@/entities/creature';
 import { useSession } from '@/entities/session';
@@ -42,6 +42,7 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
   const [busy, setBusy] = useState<'release' | 'draft' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [showMobileDetails, setShowMobileDetails] = useState(false);
 
   const quota = useAsync(
     () => (user ? getReleaseQuota(user.id) : Promise.resolve(null)),
@@ -95,23 +96,15 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
     }
   }
 
-  const renderActions = (desktop: boolean) => (
-    <div
-      className={cn(
-        'items-center gap-3.5',
-        desktop
-          ? 'hidden rounded-2xl border border-black/[.07] bg-white p-4 shadow-sm lg:flex lg:flex-col'
-          : 'flex shrink-0 border-t border-black/10 px-6 pt-3.5 lg:hidden',
-      )}
-      style={desktop ? undefined : { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 74px)' }}
-    >
+  const renderActionContent = (desktop: boolean) => (
+    <>
       <MiniTankPreview
         sprite={draw.spriteCode}
         kind={draw.kind}
         name={draw.name}
         empty={draw.isEmpty}
         caption="내 수조 미리보기"
-        className={desktop ? 'h-32 w-full' : 'h-16 w-24 shrink-0'}
+        className={desktop ? 'h-32 w-full' : 'h-24 w-full shrink-0'}
       />
       <div className="flex w-full flex-1 flex-col gap-[7px]">
         <div className="flex gap-2">
@@ -140,6 +133,25 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
           방류 전 콘텐츠 가이드 보기
         </Link>
       </div>
+    </>
+  );
+
+  const renderDetailsFields = (scope: 'desktop' | 'mobile') => (
+    <div className="shrink-0 pt-1">
+      <label htmlFor={`${scope}-creature-name`} className="mb-1.5 block text-[13px] font-semibold text-ink-sub">
+        생물 이름 <span className="font-normal text-ink-faint">(선택)</span>
+      </label>
+      <div className="mb-3 flex h-11 items-center rounded-lg border border-black/15 bg-white px-3">
+        <input
+          id={`${scope}-creature-name`}
+          value={draw.name}
+          onChange={(event) => draw.setName(event.target.value)}
+          placeholder="생물 이름을 붙여주세요"
+          maxLength={12}
+          className="w-full border-none bg-transparent text-[15px] font-semibold outline-none placeholder:text-ink-faint"
+        />
+      </div>
+      <MessageField value={draw.message} onChange={draw.setMessage} />
     </div>
   );
 
@@ -219,26 +231,87 @@ export function DrawReleaseForm({ source, onReleased, onDraftSaved }: DrawReleas
           />
         </section>
 
-        <aside className="flex min-w-0 shrink-0 flex-col gap-3 px-6 pt-3 lg:rounded-[20px] lg:border lg:border-black/[.07] lg:bg-[#fafbfb] lg:p-4">
-          <div className="shrink-0 pt-1">
-            <div className="mb-2 flex h-10 items-center rounded-lg border border-black/15 bg-white px-3">
-              <input
-                value={draw.name}
-                onChange={(e) => draw.setName(e.target.value)}
-                placeholder="생물 이름"
-                maxLength={12}
-                className="w-full border-none bg-transparent text-[15px] font-semibold outline-none placeholder:text-ink-faint"
-              />
-            </div>
-            <MessageField value={draw.message} onChange={draw.setMessage} />
-          </div>
+        <aside
+          data-testid="desktop-details-panel"
+          className="hidden min-w-0 shrink-0 flex-col gap-3 px-6 pt-3 lg:flex lg:rounded-[20px] lg:border lg:border-black/[.07] lg:bg-[#fafbfb] lg:p-4"
+        >
+          {renderDetailsFields('desktop')}
           {error && <p className="m-0 shrink-0 text-[12.5px] text-negative-accessible">{error}</p>}
           {notice && !error && <p className="m-0 shrink-0 text-[12.5px] text-brand-accessible">{notice}</p>}
-          <div className="mt-auto pt-1">{renderActions(true)}</div>
+          <div className="mt-auto flex flex-col items-center gap-3.5 rounded-2xl border border-black/[.07] bg-white p-4 shadow-sm">
+            {renderActionContent(true)}
+          </div>
         </aside>
       </div>
 
-      {renderActions(false)}
+      <div
+        data-testid="mobile-details-trigger"
+        className="flex shrink-0 items-center gap-3 border-t border-black/10 bg-white px-6 pt-3 lg:hidden"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 74px)' }}
+      >
+        <MiniTankPreview
+          sprite={draw.spriteCode}
+          kind={draw.kind}
+          name={draw.name}
+          empty={draw.isEmpty}
+          caption="내 수조 미리보기"
+          className="h-14 w-20 shrink-0"
+        />
+        <button
+          type="button"
+          aria-label="다음: 이름과 한마디"
+          aria-expanded={showMobileDetails}
+          onClick={() => setShowMobileDetails(true)}
+          className="flex h-14 flex-1 items-center justify-between rounded-xl bg-brand px-4 text-left text-white shadow-sm"
+        >
+          <span>
+            <span className="block text-[10px] font-semibold text-white/75">그림을 다 그렸다면</span>
+            <span className="block text-sm font-bold">다음: 이름과 한마디</span>
+          </span>
+          <Icon name="chevron-right" size={18} aria-hidden />
+        </button>
+      </div>
+
+      {showMobileDetails && (
+        <div className="absolute inset-0 z-[60] flex items-end bg-black/35 lg:hidden">
+          <button
+            type="button"
+            aria-hidden="true"
+            tabIndex={-1}
+            className="absolute inset-0"
+            onClick={() => setShowMobileDetails(false)}
+          />
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-details-title"
+            className="relative z-10 max-h-[88%] w-full overflow-y-auto rounded-t-3xl bg-white px-6 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-3 shadow-[0_-16px_48px_rgba(4,34,40,.28)]"
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-black/15" />
+            <div className="mb-4 flex items-start justify-between">
+              <div>
+                <p className="mb-1 text-[11px] font-bold text-brand-accessible">마지막 단계</p>
+                <h2 id="mobile-details-title" className="text-lg font-bold text-ink">생물 소개하기</h2>
+                <p className="mt-1 text-xs text-ink-faint">이름과 한마디는 선택이에요. 바로 방류해도 괜찮아요.</p>
+              </div>
+              <button
+                type="button"
+                aria-label="생물 소개 닫기"
+                onClick={() => setShowMobileDetails(false)}
+                className="grid h-10 w-10 place-items-center rounded-full bg-black/[.05] text-ink-sub"
+              >
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            {renderDetailsFields('mobile')}
+            {error && <p className="mt-3 text-[12.5px] text-negative-accessible">{error}</p>}
+            {notice && !error && <p className="mt-3 text-[12.5px] text-brand-accessible">{notice}</p>}
+            <div className="mt-4 flex flex-col items-center gap-3.5 rounded-2xl border border-black/[.07] bg-[#fafbfb] p-4">
+              {renderActionContent(false)}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
