@@ -46,6 +46,8 @@ export function GuidePicker({ options, value, onChange }: GuidePickerProps) {
         aria-label="밑그림 선택"
         onScroll={updateEdges}
         onPointerDown={(event) => {
+          // 터치는 브라우저의 관성 스크롤을 그대로 사용한다. 커스텀 드래그는 마우스용이다.
+          if (event.pointerType === 'touch') return;
           if (event.button !== 0 || !scroller.current) return;
           drag.current = {
             pointerId: event.pointerId,
@@ -85,8 +87,7 @@ export function GuidePicker({ options, value, onChange }: GuidePickerProps) {
           scroller.current.scrollLeft += event.deltaY;
         }}
         className={cn(
-          'flex w-full min-w-0 cursor-grab touch-pan-y select-none gap-1.5 overflow-x-auto overscroll-x-contain pb-1 pr-10 [scrollbar-width:none] active:cursor-grabbing [&::-webkit-scrollbar]:hidden',
-          canScrollLeft && 'pl-10',
+          'flex w-full min-w-0 cursor-grab snap-x snap-proximity touch-pan-x select-none gap-1.5 overflow-x-auto overscroll-x-contain scroll-smooth pb-1 pr-10 [scrollbar-width:none] active:cursor-grabbing [&::-webkit-scrollbar]:hidden',
         )}
       >
         {options.map((option) => {
@@ -99,7 +100,7 @@ export function GuidePicker({ options, value, onChange }: GuidePickerProps) {
               aria-checked={active}
               onClick={() => onChange(option.key)}
               className={cn(
-                'flex h-[54px] min-w-[64px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-2',
+                'flex h-[54px] min-w-[64px] shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-xl px-2 [scroll-snap-stop:always]',
                 active
                   ? 'border-[1.5px] border-brand bg-brand-bg text-brand-accessible'
                   : 'border border-black/10 bg-white text-ink-sub',
