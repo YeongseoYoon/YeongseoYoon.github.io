@@ -93,6 +93,7 @@ export function MyTankPage() {
           mode={accountMode}
           hasLocalCreatures={sorted.length > 0}
           initialNickname={user?.nickname ?? ''}
+          onModeChange={setAccountMode}
           onClose={() => {
             setAccountMode(null);
             if (params.has('save-account')) navigate('/my-tank', { replace: true });
