@@ -13,7 +13,9 @@ export function getSupabaseClient(): SupabaseClient {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false,
+      // OAuth/이메일 확인 링크가 돌아왔을 때 세션을 복구한다.
+      // PKCE의 `code` 응답은 /auth/callback에서도 명시적으로 교환한다.
+      detectSessionInUrl: true,
     },
   });
   return client;
@@ -49,4 +51,3 @@ export function subscribeToServerChanges(tables: string[], onChange: () => void)
     void supabase.removeChannel(channel);
   };
 }
-

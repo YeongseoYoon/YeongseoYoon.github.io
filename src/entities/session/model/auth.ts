@@ -19,6 +19,8 @@ export interface Identity {
   role: UserRole;
   strikes: number;
   createdAt: number;
+  isAnonymous: boolean;
+  email: string | null;
 }
 
 interface PlatformIdentity {
@@ -58,6 +60,8 @@ async function resolveIdentityOnce(): Promise<Identity> {
       role: 'creator',
       strikes: 0,
       createdAt: Date.now(),
+      isAnonymous: true,
+      email: null,
     };
   }
 
@@ -89,6 +93,8 @@ async function resolveIdentityOnce(): Promise<Identity> {
     role: profile.role,
     strikes: profile.strikes,
     createdAt: new Date(profile.created_at).getTime(),
+    isAnonymous: sessionData.session.user.is_anonymous ?? false,
+    email: sessionData.session.user.email ?? null,
   };
 }
 
@@ -100,6 +106,12 @@ export function resolveIdentity(): Promise<Identity> {
     });
   }
   return identityRequest;
+}
+
+/** 인증 수단 연결·로그아웃 뒤 캐시된 익명 신원을 버리고 다시 확인한다. */
+export function refreshIdentity(): Promise<Identity> {
+  identityRequest = null;
+  return resolveIdentity();
 }
 
 /* ── 운영 권한 판별 ─────────────────────────────────────────
@@ -144,7 +156,7 @@ interface AdminAccessResult {
 }
 
 /** 서버에서 운영자 코드를 검증하고 현재 익명 세션에 운영 권한을 부여한다. */
-export async function claimAdminAccess(passphrase: string, source: Identity['source']): Promise<Identity> {
+export async function claimAdminAccess(passphrase: string, current: Identity): Promise<Identity> {
   const result = await rpcOne<AdminAccessResult>('claim_admin_access', { p_code: passphrase });
   if (!result.ok) {
     if (result.error_code === 'locked') throw new Error('입력 횟수를 초과했어요. 15분 뒤 다시 시도해 주세요.');
@@ -154,10 +166,12 @@ export async function claimAdminAccess(passphrase: string, source: Identity['sou
   return {
     id: result.id,
     nickname: result.nickname,
-    source,
+    source: current.source,
     role: result.role,
     strikes: result.strikes,
     createdAt: new Date(result.created_at).getTime(),
+    isAnonymous: current.isAnonymous,
+    email: current.email,
   };
 }
 

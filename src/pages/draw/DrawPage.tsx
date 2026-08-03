@@ -2,6 +2,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Screen, ScreenHeader } from '@/shared/ui';
 import { useAsync } from '@/shared/lib';
 import { creatureApi, type Creature } from '@/entities/creature';
+import { useSession } from '@/entities/session';
 import { DrawReleaseForm } from '@/features/release-creature';
 
 /**
@@ -11,6 +12,7 @@ import { DrawReleaseForm } from '@/features/release-creature';
  */
 export function DrawPage() {
   const navigate = useNavigate();
+  const { isAnonymous } = useSession();
   const [params] = useSearchParams();
   const editId = params.get('edit');
 
@@ -32,7 +34,12 @@ export function DrawPage() {
         <DrawReleaseForm
           key={source?.id ?? 'new'}
           source={source}
-          onReleased={() => navigate('/my-tank')}
+          onReleased={() => {
+            const promptKey = 'endless-aquarium/account-prompted';
+            const shouldPrompt = isAnonymous && localStorage.getItem(promptKey) !== '1';
+            if (shouldPrompt) localStorage.setItem(promptKey, '1');
+            navigate(shouldPrompt ? '/my-tank?save-account=1' : '/my-tank');
+          }}
           onDraftSaved={() => undefined}
         />
       )}

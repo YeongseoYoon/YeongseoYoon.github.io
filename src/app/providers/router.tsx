@@ -20,6 +20,9 @@ const AdminPage = lazy(() =>
 const GuidelinesPage = lazy(() =>
   import('@/pages/guidelines').then((module) => ({ default: module.GuidelinesPage })),
 );
+const AuthCallbackPage = lazy(() =>
+  import('@/pages/auth-callback').then((module) => ({ default: module.AuthCallbackPage })),
+);
 
 function deferred(page: ReactNode) {
   return (
@@ -54,6 +57,7 @@ export const router = createBrowserRouter(
         { path: 'tank/:authorId', element: deferred(<PublicTankPage />) },
         { path: 'admin', element: deferred(<AdminPage />) },
         { path: 'guidelines', element: deferred(<GuidelinesPage />) },
+        { path: 'auth/callback', element: deferred(<AuthCallbackPage />) },
       ],
     },
   ],
