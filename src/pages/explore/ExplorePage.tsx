@@ -39,7 +39,17 @@ export function ExplorePage() {
     () => worldWidthFor([{ worldX: publicStats?.maxWorldX ?? 0 }]),
     [publicStats?.maxWorldX],
   );
-  const viewport = useMapViewport({ contentWidth, contentHeight: SWIM_BAND, floorY: FLOOR_Y });
+  const initialWorldX = publicStats
+    ? publicStats.count > 0
+      ? (120 + publicStats.maxWorldX) / 2
+      : contentWidth / 2
+    : null;
+  const viewport = useMapViewport({
+    contentWidth,
+    contentHeight: SWIM_BAND,
+    floorY: FLOOR_Y,
+    initialWorldX,
+  });
 
   const queryRange = useMemo(() => {
     if (!viewport.size.w || !viewport.zoom) return { min: 0, max: QUERY_CELL * 2 };

@@ -22,6 +22,8 @@ export {
   FLOOR_Y,
   WATER_TOP,
   WANDER_RADIUS,
+  WANDER_X_RADIUS,
+  WANDER_Y_RADIUS,
   SWIM_BAND,
 } from './model/worldCoords';
 export { creatureApi } from './api/creatureApi';

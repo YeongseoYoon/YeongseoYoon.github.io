@@ -1,7 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { mulberry32 } from '@/shared/lib';
-import { CreatureSprite, FLOOR_Y, WANDER_RADIUS, WATER_TOP, type Creature } from '@/entities/creature';
+import {
+  CreatureSprite,
+  FLOOR_Y,
+  WANDER_X_RADIUS,
+  WANDER_Y_RADIUS,
+  WATER_TOP,
+  type Creature,
+} from '@/entities/creature';
 import type { WorldCreature } from '../model/world';
+import { frameDeltaSeconds, stabilizeSwimVelocity } from '../model/swimMotion';
 
 interface SwimFieldProps {
   /** 화면에 보이는 생물만 (컬링된 목록) */
@@ -57,13 +65,13 @@ export function SwimField({ visible, onSelect, didDrag, lowDetail }: SwimFieldPr
     const existing = states.current.get(p.creature.id);
     if (existing) return existing;
     const rnd = mulberry32(p.x * 7919 + p.y);
-    const speed = 12 + rnd() * 20;
+    const speed = 16 + rnd() * 20;
     const angle = rnd() * Math.PI * 2;
     const created: SwimState = {
       x: p.x,
       y: p.y,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed * 0.35,
+      vy: Math.sin(angle) * speed * 0.55,
       flip: p.flip ? -1 : 1,
       el: null,
       box: null,
@@ -78,7 +86,7 @@ export function SwimField({ visible, onSelect, didDrag, lowDetail }: SwimFieldPr
     let last = performance.now();
 
     const step = (t: number) => {
-      const dt = Math.min(0.05, (t - last) / 1000);
+      const dt = frameDeltaSeconds(t, last);
       last = t;
 
       for (const p of visibleRef.current) {
@@ -86,18 +94,35 @@ export function SwimField({ visible, onSelect, didDrag, lowDetail }: SwimFieldPr
         const s = states.current.get(p.creature.id);
         if (!s?.el) continue;
 
-        if (Math.random() < 0.02) {
-          s.vx += (Math.random() - 0.5) * 7;
-          s.vy += (Math.random() - 0.5) * 4;
+        if (dt > 0 && Math.random() < dt * 0.7) {
+          s.vx += (Math.random() - 0.5) * 10;
+          s.vy += (Math.random() - 0.5) * 7;
         }
+        const velocity = stabilizeSwimVelocity(s.vx, s.vy);
+        s.vx = velocity.vx;
+        s.vy = velocity.vy;
         s.x += s.vx * dt;
         s.y += s.vy * dt;
 
-        // 앵커 주변 반경 안에서만 돈다 → "내 생물은 늘 그 근처"
-        if (s.x < p.x - WANDER_RADIUS) s.vx = Math.abs(s.vx);
-        else if (s.x > p.x + WANDER_RADIUS) s.vx = -Math.abs(s.vx);
-        if (s.y < Math.max(WATER_TOP, p.y - WANDER_RADIUS)) s.vy = Math.abs(s.vy);
-        else if (s.y > Math.min(FLOOR_Y - p.h - 10, p.y + WANDER_RADIUS)) s.vy = -Math.abs(s.vy);
+        // 넓은 타원 범위 안에서 헤엄치되 저장된 앵커 구역은 벗어나지 않는다.
+        const minX = p.x - WANDER_X_RADIUS;
+        const maxX = p.x + WANDER_X_RADIUS;
+        const minY = Math.max(WATER_TOP, p.y - WANDER_Y_RADIUS);
+        const maxY = Math.min(FLOOR_Y - p.h - 10, p.y + WANDER_Y_RADIUS);
+        if (s.x < minX) {
+          s.x = minX;
+          s.vx = Math.abs(s.vx);
+        } else if (s.x > maxX) {
+          s.x = maxX;
+          s.vx = -Math.abs(s.vx);
+        }
+        if (s.y < minY) {
+          s.y = minY;
+          s.vy = Math.abs(s.vy);
+        } else if (s.y > maxY) {
+          s.y = maxY;
+          s.vy = -Math.abs(s.vy);
+        }
 
         const want = s.vx < 0 ? -1 : 1;
         if (want !== s.flip) {

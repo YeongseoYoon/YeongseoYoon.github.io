@@ -26,8 +26,11 @@ const ROWS = 5;
 /** 생물이 배치되는 물기둥 띠 높이 (바닥 위) — 세로 고정 카메라에서 전부 보이도록 */
 export const SWIM_BAND = 720;
 
-/** 앵커 주변을 헤엄치는 반경 (연출 전용, 저장 안 함) */
-export const WANDER_RADIUS = 90;
+/** 앵커 주변을 헤엄치는 범위 (연출 전용, 저장 안 함) */
+export const WANDER_X_RADIUS = 260;
+export const WANDER_Y_RADIUS = 170;
+/** 화면 컬링 여유로 사용하는 최대 반경. */
+export const WANDER_RADIUS = Math.max(WANDER_X_RADIUS, WANDER_Y_RADIUS);
 
 export interface WorldPoint {
   worldX: number;

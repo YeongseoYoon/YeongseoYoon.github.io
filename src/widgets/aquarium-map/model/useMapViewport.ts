@@ -10,7 +10,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
  * - 바다는 **가로로 무한**하다. 콘텐츠가 있는 범위만 부드럽게 가둔다.
  * - 바닥은 월드 사각형이 아니라 **화면 공간 레이어**로 그린다(AquariumMap).
  *   → 화면 크기·배율이 어떻든 바닥은 항상 그려진다.
- * - 세로는 "바닥선이 화면 안에 머무는" 범위로만 이동할 수 있다.
+ * - 세로는 수면과 바닥을 오갈 수 있도록 제한된 범위에서 이동한다.
  */
 export interface Viewport {
   zoom: number;
@@ -51,9 +51,11 @@ interface Options {
   contentHeight: number;
   /** 바닥선의 월드 y */
   floorY: number;
+  /** 첫 진입 때 화면 중앙에 둘 월드 x. 통계 로딩 전에는 null. */
+  initialWorldX?: number | null;
 }
 
-export function useMapViewport({ contentWidth, contentHeight, floorY }: Options): Viewport {
+export function useMapViewport({ contentWidth, contentHeight, floorY, initialWorldX = null }: Options): Viewport {
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [zoom, setZoom] = useState(0.8);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -72,7 +74,7 @@ export function useMapViewport({ contentWidth, contentHeight, floorY }: Options)
   /**
    * 팬 제한.
    * - 가로: 콘텐츠 범위 ± 여유. 콘텐츠가 화면보다 좁으면 가운데.
-   * - 세로: 바닥선이 화면 안(42%~100%)에 머물도록. → 바닥은 절대 사라지지 않는다.
+   * - 세로: 바닥선이 화면 위쪽부터 화면 아래 바깥까지 이동한다.
    */
   /** 모래 띠 높이 — 화면 비율 기반, 상한 있음. */
   const groundBand = Math.min(GROUND_MAX_PX, size.h * GROUND_RATIO);
@@ -96,11 +98,6 @@ export function useMapViewport({ contentWidth, contentHeight, floorY }: Options)
     : ABS_MIN_ZOOM;
   const maxZoom = Math.max(minZoom * 2.6, 1.8);
 
-  /**
-   * 세로는 **고정**한다. 바닥선이 항상 화면 하단에서 groundBand 위에 오도록 계산만 한다.
-   * (세로로도 끌 수 있게 하면 땅이 화면 절반을 덮거나 반대로 사라지는 문제가 생긴다.
-   *  이 세계관은 "옆으로 넓어지는 바다"이므로 가로 이동만으로 충분하다.)
-   */
   const clampPan = useCallback(
     (p: { x: number; y: number }, z: number) => {
       const contentPx = (contentWidth + EDGE_MARGIN * 2) * z;
@@ -108,7 +105,10 @@ export function useMapViewport({ contentWidth, contentHeight, floorY }: Options)
         contentPx <= size.w
           ? (size.w - contentPx) / 2 + EDGE_MARGIN * z
           : clamp(p.x, size.w - contentPx + EDGE_MARGIN * z, EDGE_MARGIN * z);
-      return { x, y: size.h - groundBand - floorY * z };
+      // 바닥을 올려 깊은 곳을 볼 수 있지만 화면 절반 이상이 모래가 되지는 않게 한다.
+      const minY = size.h * 0.58 - floorY * z;
+      const maxY = size.h * 1.3 - floorY * z;
+      return { x, y: clamp(p.y, minY, maxY) };
     },
     [contentWidth, floorY, size.w, size.h, groundBand],
   );
@@ -140,14 +140,21 @@ export function useMapViewport({ contentWidth, contentHeight, floorY }: Options)
     };
   }, []);
 
-  // 최초: 바닥이 화면 하단에 오도록 맞춘다.
+  // 최초: 실제 생물이 분포한 가로 중앙 + 바닥이 보이는 수심으로 맞춘다.
   useLayoutEffect(() => {
-    if (inited.current || !size.w || !size.h) return;
+    if (inited.current || !size.w || !size.h || initialWorldX == null) return;
     inited.current = true;
     const z = clamp(minZoom * 1.15, minZoom, maxZoom);
+    const nextPan = clampPan({
+      x: size.w / 2 - initialWorldX * z,
+      y: size.h - groundBand - floorY * z,
+    }, z);
+    // 같은 커밋에서 뒤따르는 보정 effect가 이전 ref 값으로 중앙 정렬을 덮지 않게 한다.
+    zoomRef.current = z;
+    panRef.current = nextPan;
     setZoom(z);
-    setPan(clampPan({ x: 0, y: 0 }, z));
-  }, [size.w, size.h, floorY, minZoom, maxZoom, clampPan]);
+    setPan(nextPan);
+  }, [size.w, size.h, floorY, groundBand, initialWorldX, minZoom, maxZoom, clampPan]);
 
   // 크기/배율이 바뀌면 팬을 다시 가둔다(바닥이 화면 밖으로 밀리지 않도록).
   useEffect(() => {
@@ -166,8 +173,11 @@ export function useMapViewport({ contentWidth, contentHeight, floorY }: Options)
       const pp = panRef.current;
       const wx = (cx - pp.x) / pz;
       const wy = (cy - pp.y) / pz;
+      const nextPan = clampPan({ x: cx - wx * z, y: cy - wy * z }, z);
+      zoomRef.current = z;
+      panRef.current = nextPan;
       setZoom(z);
-      setPan(clampPan({ x: cx - wx * z, y: cy - wy * z }, z));
+      setPan(nextPan);
     },
     [clampPan, minZoom, maxZoom],
   );
@@ -206,8 +216,11 @@ export function useMapViewport({ contentWidth, contentHeight, floorY }: Options)
       }
 
       const dx = cur.x - prev.x;
-      dragMoved.current += Math.abs(dx) + Math.abs(cur.y - prev.y);
-      setPan(clampPan({ x: panRef.current.x + dx, y: 0 }, zoomRef.current));
+      const dy = cur.y - prev.y;
+      dragMoved.current += Math.abs(dx) + Math.abs(dy);
+      const nextPan = clampPan({ x: panRef.current.x + dx, y: panRef.current.y + dy }, zoomRef.current);
+      panRef.current = nextPan;
+      setPan(nextPan);
     },
     [clampPan, applyZoom],
   );
@@ -239,10 +252,16 @@ export function useMapViewport({ contentWidth, contentHeight, floorY }: Options)
   );
 
   const focusOn = useCallback(
-    (worldX: number, _worldY?: number, targetZoom = maxZoom) => {
+    (worldX: number, worldY?: number, targetZoom = maxZoom) => {
       const z = clamp(targetZoom, minZoom, maxZoom);
+      const nextPan = clampPan({
+        x: size.w / 2 - worldX * z,
+        y: worldY == null ? panRef.current.y : size.h / 2 - worldY * z,
+      }, z);
+      zoomRef.current = z;
+      panRef.current = nextPan;
       setZoom(z);
-      setPan(clampPan({ x: size.w / 2 - worldX * z, y: 0 }, z));
+      setPan(nextPan);
     },
     [size.w, size.h, clampPan, minZoom, maxZoom],
   );
