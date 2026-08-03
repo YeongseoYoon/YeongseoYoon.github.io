@@ -21,6 +21,8 @@ Supabase Dashboard에서 프로젝트를 만든 뒤 Authentication의 Anonymous 
 4. `supabase/migrations/202608010004_admin_access.sql`
 5. `supabase/migrations/202608010005_pretty_sample_creatures.sql` (기존 샘플 데이터가 있을 때)
 6. `supabase/migrations/202608020001_report_rate_limit.sql`
+7. `supabase/migrations/202608030001_remove_release_limit.sql`
+8. `supabase/migrations/202608030002_account_profiles.sql`
 
 `.env.example`을 `.env.local`로 복사하고 다음 값을 채운다.
 
@@ -37,6 +39,15 @@ VITE_SUPABASE_PUBLISHABLE_KEY="<publishable-key>"
 - 일반 웹에서는 브라우저 저장소의 무작위 기기 ID와 Supabase 익명 세션을 연결한다. 같은 브라우저 프로필에서는 같은 사용자지만, 다른 기기·브라우저·시크릿 창은 각각 새 사용자다. 사이트 데이터를 지워도 새 사용자로 인식된다.
 - 앱인토스에서는 `getAnonymousKey()`의 해시를 사용한다. 원본 키는 서버에 저장하지 않는다.
 - 공개 생물 감상에는 별도 회원가입이나 개인정보 입력이 필요 없다.
+
+## 내 수조 계정 연결
+
+- 그림은 익명 상태에서도 바로 만들 수 있다. `내 수조`에서 카카오 또는 이메일을 연결하면 현재 Supabase 사용자 UUID가 유지되어 기존 작품도 그대로 남는다.
+- 다른 기기에서는 `기존 수조 불러오기`로 같은 인증 수단을 사용한다. 닉네임은 중복 가능한 표시 이름일 뿐 로그인 ID로 사용하지 않는다.
+- Supabase Dashboard → Authentication에서 **Allow anonymous sign-ins**와 **Manual Linking**을 켜고 Kakao provider를 구성한다.
+- Kakao provider의 REST API Key와 Client Secret을 등록한 뒤 Vercel에 `VITE_AUTH_KAKAO_ENABLED=true`를 설정해야 카카오 버튼이 노출된다. 설정 전에는 이메일 로그인만 제공한다.
+- Authentication → URL Configuration의 Redirect URLs에 운영 주소와 로컬 주소의 `/auth/callback`을 등록한다.
+- 다른 브라우저에서 익명 작품을 먼저 만든 뒤 기존 계정에 로그인하는 경우 자동 병합하지 않는다. 현재 UI는 먼저 현 수조를 보관하도록 안내한다. 안전한 자동 병합에는 양쪽 계정 소유를 서버에서 검증하는 별도 이전 API가 필요하다.
 
 ## 여러 기기의 운영자 지정
 

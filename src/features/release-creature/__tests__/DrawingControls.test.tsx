@@ -33,6 +33,9 @@ describe('모바일 그리기 도구', () => {
       error: null,
       isAdmin: false,
       inToss: false,
+      isAnonymous: true,
+      accountEmail: null,
+      refreshAccount: async () => undefined,
       unlockAdmin: async () => false,
       lockAdmin: () => undefined,
     };
@@ -60,6 +63,9 @@ describe('모바일 그리기 도구', () => {
       error: null,
       isAdmin: false,
       inToss: false,
+      isAnonymous: true,
+      accountEmail: null,
+      refreshAccount: async () => undefined,
       unlockAdmin: async () => false,
       lockAdmin: () => undefined,
     };
@@ -102,6 +108,9 @@ describe('모바일 그리기 도구', () => {
       error: null,
       isAdmin: false,
       inToss: false,
+      isAnonymous: true,
+      accountEmail: null,
+      refreshAccount: async () => undefined,
       unlockAdmin: async () => false,
       lockAdmin: () => undefined,
     };

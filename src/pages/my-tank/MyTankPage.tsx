@@ -1,18 +1,27 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon, Screen, ScreenHeader } from '@/shared/ui';
 import { useAsync } from '@/shared/lib';
 import { isSupabaseMode, subscribeToServerChanges } from '@/shared/api';
 import { creatureApi, type Creature } from '@/entities/creature';
 import { useSession } from '@/entities/session';
 import { ShareTankSheet } from '@/features/share-creature';
+import {
+  AccountAccessSheet,
+  AccountStatusCard,
+  type AccountAccessMode,
+} from '@/features/account-access';
 import { MyCreatureList, MyTankPreview } from '@/widgets/my-tank';
 
 /** 내 수조 (PRD 7·10). 내 생물·방류 상태 확인, 반려 사유 확인 후 재제출. */
 export function MyTankPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { user } = useSession();
   const [sharing, setSharing] = useState(false);
+  const [accountMode, setAccountMode] = useState<AccountAccessMode | null>(
+    params.get('save-account') === '1' ? 'preserve' : null,
+  );
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
   const { data: creatures, refetch } = useAsync(
@@ -56,6 +65,7 @@ export function MyTankPage() {
 
       <div className="flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(360px,2fr)] lg:gap-6 lg:px-6 lg:pb-20">
         <section className="shrink-0 lg:min-w-0">
+          <AccountStatusCard onOpen={setAccountMode} />
           <MyTankPreview
             creatures={sorted}
             className="lg:mx-0 lg:mt-1.5 lg:aspect-[16/9] lg:max-h-[420px]"
@@ -76,6 +86,17 @@ export function MyTankPage() {
           ownerName={user.nickname ?? '나'}
           creatures={publicCreatures}
           onClose={() => setSharing(false)}
+        />
+      )}
+      {accountMode && (
+        <AccountAccessSheet
+          mode={accountMode}
+          hasLocalCreatures={sorted.length > 0}
+          initialNickname={user?.nickname ?? ''}
+          onClose={() => {
+            setAccountMode(null);
+            if (params.has('save-account')) navigate('/my-tank', { replace: true });
+          }}
         />
       )}
     </Screen>

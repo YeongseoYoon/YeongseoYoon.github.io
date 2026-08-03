@@ -7,6 +7,7 @@ import {
   claimAdminAccess,
   unlockLocalAdmin,
   lockLocalAdmin,
+  refreshIdentity,
   type Identity,
 } from '../model/auth';
 
@@ -55,7 +56,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const unlockAdmin = useCallback(async (passphrase: string) => {
     if (!identity) return false;
     if (import.meta.env?.VITE_API_MODE === 'supabase') {
-      const next = await claimAdminAccess(passphrase, identity.source);
+      const next = await claimAdminAccess(passphrase, identity);
       setIdentity(next);
       return true;
     }
@@ -69,6 +70,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setAdminTick((n) => n + 1);
   }, []);
 
+  const refreshAccount = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setIdentity(await refreshIdentity());
+    } catch (reason: unknown) {
+      setError(reason instanceof Error ? reason : new Error(String(reason)));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const value = useMemo<SessionValue>(
     () => ({
       user: identity ? toUser(identity, isAdmin) : null,
@@ -76,10 +89,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       error,
       isAdmin,
       inToss: identity?.source === 'toss',
+      isAnonymous: identity?.isAnonymous ?? true,
+      accountEmail: identity?.email ?? null,
+      refreshAccount,
       unlockAdmin,
       lockAdmin,
     }),
-    [identity, isAdmin, loading, error, unlockAdmin, lockAdmin],
+    [identity, isAdmin, loading, error, unlockAdmin, lockAdmin, refreshAccount],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
