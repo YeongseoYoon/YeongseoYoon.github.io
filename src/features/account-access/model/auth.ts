@@ -4,6 +4,17 @@ export type AccountAccessMode = 'preserve' | 'restore';
 
 const AUTH_INTENT_KEY = 'endless-aquarium/auth-intent';
 
+export function isMissingAccountError(reason: unknown): boolean {
+  return reason instanceof Error && /signups? not allowed for otp/i.test(reason.message);
+}
+
+export function accountAccessErrorMessage(reason: unknown): string {
+  if (isMissingAccountError(reason)) {
+    return '아직 보관된 수조가 없는 이메일이에요. 현재 수조를 먼저 보관해 주세요.';
+  }
+  return reason instanceof Error ? reason.message : '로그인을 시작하지 못했어요.';
+}
+
 export function authCallbackUrl(next = '/my-tank'): string {
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   const url = new URL(`${base}/auth/callback`, window.location.origin);

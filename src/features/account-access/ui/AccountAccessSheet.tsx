@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { Icon } from '@/shared/ui';
-import { startEmailAccess, startKakaoAccess, type AccountAccessMode } from '../model/auth';
+import {
+  accountAccessErrorMessage,
+  isMissingAccountError,
+  startEmailAccess,
+  startKakaoAccess,
+  type AccountAccessMode,
+} from '../model/auth';
 
 const KAKAO_ENABLED = import.meta.env?.VITE_AUTH_KAKAO_ENABLED === 'true';
 
@@ -8,6 +14,7 @@ interface AccountAccessSheetProps {
   mode: AccountAccessMode;
   hasLocalCreatures: boolean;
   initialNickname?: string;
+  onModeChange: (mode: AccountAccessMode) => void;
   onClose: () => void;
 }
 
@@ -15,6 +22,7 @@ export function AccountAccessSheet({
   mode,
   hasLocalCreatures,
   initialNickname = '',
+  onModeChange,
   onClose,
 }: AccountAccessSheetProps) {
   const [email, setEmail] = useState('');
@@ -22,11 +30,13 @@ export function AccountAccessSheet({
   const [busy, setBusy] = useState<'kakao' | 'email' | null>(null);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [missingAccount, setMissingAccount] = useState(false);
   const preserving = mode === 'preserve';
 
   async function run(kind: 'kakao' | 'email') {
     setBusy(kind);
     setError('');
+    setMissingAccount(false);
     try {
       if (kind === 'kakao') await startKakaoAccess(mode, nickname);
       else {
@@ -34,7 +44,8 @@ export function AccountAccessSheet({
         setSent(true);
       }
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : '로그인을 시작하지 못했어요.');
+      setMissingAccount(isMissingAccountError(reason));
+      setError(accountAccessErrorMessage(reason));
     } finally {
       setBusy(null);
     }
@@ -130,6 +141,18 @@ export function AccountAccessSheet({
         )}
 
         {error && <p role="alert" className="mb-0 mt-3 text-center text-[12.5px] text-negative-accessible">{error}</p>}
+        {missingAccount && !preserving && (
+          <button
+            className="mt-3 h-11 w-full rounded-xl bg-brand-bg text-[13px] font-semibold text-brand-accessible"
+            onClick={() => {
+              setError('');
+              setMissingAccount(false);
+              onModeChange('preserve');
+            }}
+          >
+            이 브라우저의 수조 보관하기
+          </button>
+        )}
         <p className="mb-0 mt-4 text-center text-[11px] leading-relaxed text-ink-faint">
           닉네임은 중복될 수 있으며 로그인 정보로 사용하지 않아요.
         </p>
