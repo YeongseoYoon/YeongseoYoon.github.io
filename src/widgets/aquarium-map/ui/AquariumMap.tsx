@@ -77,13 +77,14 @@ export function AquariumMap({ placed, viewport, onSelect }: AquariumMapProps) {
       </div>
 
       {/*
-        모래 바닥 — 화면 공간. 좌우로 무한하고 항상 화면 아래까지 채운다.
-        (월드 사각형 안에 두면 배율·창 크기에 따라 바닥이 사라지는 문제가 생긴다)
+        모래 바닥 — 화면 높이의 20%짜리 얇은 띠.
+        바닥선이 화면 아래로 내려가면 함께 잘려 나가며, 얕은 수심에서는 완전히 사라진다.
       */}
       <div
-        className="sand-floor pointer-events-none absolute inset-x-0 bottom-0"
+        data-testid="sand-floor"
+        className="sand-floor pointer-events-none absolute inset-x-0 h-1/5"
         style={{
-          top: Math.max(0, floorScreenY),
+          top: floorScreenY,
           borderRadius: `46% 54% 0 0 / ${16 * zoom}px ${20 * zoom}px 0 0`,
           boxShadow: 'inset 0 8px 12px rgba(255,255,255,.45)',
         }}

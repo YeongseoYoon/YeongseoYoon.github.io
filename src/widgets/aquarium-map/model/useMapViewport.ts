@@ -105,8 +105,8 @@ export function useMapViewport({ contentWidth, contentHeight, floorY, initialWor
         contentPx <= size.w
           ? (size.w - contentPx) / 2 + EDGE_MARGIN * z
           : clamp(p.x, size.w - contentPx + EDGE_MARGIN * z, EDGE_MARGIN * z);
-      // 바닥을 올려 깊은 곳을 볼 수 있지만 화면 절반 이상이 모래가 되지는 않게 한다.
-      const minY = size.h * 0.58 - floorY * z;
+      // 가장 깊이 내려가도 모래는 화면 아래 20%까지만 보인다.
+      const minY = size.h * 0.8 - floorY * z;
       const maxY = size.h * 1.3 - floorY * z;
       return { x, y: clamp(p.y, minY, maxY) };
     },

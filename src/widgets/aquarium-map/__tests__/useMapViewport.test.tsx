@@ -55,4 +55,40 @@ describe('수족관 카메라', () => {
 
     expect(result.current.pan.y).toBeLessThan(before);
   });
+
+  it('가장 깊은 위치에서도 바닥선은 화면 아래 20%보다 위로 올라오지 않는다', async () => {
+    const element = mapElement();
+    const { result } = renderHook(() => useMapViewport({
+      contentWidth: 5_200,
+      contentHeight: 720,
+      floorY: 1_350,
+      initialWorldX: 2_500,
+    }));
+    act(() => result.current.bind.ref(element));
+    await waitFor(() => expect(result.current.size.h).toBe(800));
+
+    act(() => {
+      result.current.bind.onPointerDown({
+        target: element,
+        pointerId: 2,
+        clientX: 500,
+        clientY: 700,
+      } as unknown as React.PointerEvent);
+      result.current.bind.onPointerMove({
+        pointerId: 2,
+        clientX: 500,
+        clientY: -2_000,
+      } as React.PointerEvent);
+    });
+    expect(result.current.floorScreenY).toBeCloseTo(640);
+
+    act(() => {
+      result.current.bind.onPointerMove({
+        pointerId: 2,
+        clientX: 500,
+        clientY: 2_000,
+      } as React.PointerEvent);
+    });
+    expect(result.current.floorScreenY).toBeGreaterThan(800);
+  });
 });
