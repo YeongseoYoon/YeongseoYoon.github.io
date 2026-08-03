@@ -49,14 +49,14 @@ describe('수족관 카메라', () => {
       result.current.bind.onPointerMove({
         pointerId: 1,
         clientX: 500,
-        clientY: 280,
+        clientY: 520,
       } as React.PointerEvent);
     });
 
-    expect(result.current.pan.y).toBeLessThan(before);
+    expect(result.current.pan.y).toBeGreaterThan(before);
   });
 
-  it('가장 깊은 위치에서도 바닥선은 화면 아래 20%보다 위로 올라오지 않는다', async () => {
+  it('첫 진입과 가장 깊은 위치의 바닥 노출을 모두 15%로 유지한다', async () => {
     const element = mapElement();
     const { result } = renderHook(() => useMapViewport({
       contentWidth: 5_200,
@@ -66,6 +66,7 @@ describe('수족관 카메라', () => {
     }));
     act(() => result.current.bind.ref(element));
     await waitFor(() => expect(result.current.size.h).toBe(800));
+    expect(result.current.floorScreenY).toBeCloseTo(680);
 
     act(() => {
       result.current.bind.onPointerDown({
@@ -80,7 +81,7 @@ describe('수족관 카메라', () => {
         clientY: -2_000,
       } as React.PointerEvent);
     });
-    expect(result.current.floorScreenY).toBeCloseTo(640);
+    expect(result.current.floorScreenY).toBeCloseTo(680);
 
     act(() => {
       result.current.bind.onPointerMove({

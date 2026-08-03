@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { SAND_SCREEN_RATIO } from './mapLayout';
 
 /**
  * 오픈월드 카메라.
@@ -105,8 +106,8 @@ export function useMapViewport({ contentWidth, contentHeight, floorY, initialWor
         contentPx <= size.w
           ? (size.w - contentPx) / 2 + EDGE_MARGIN * z
           : clamp(p.x, size.w - contentPx + EDGE_MARGIN * z, EDGE_MARGIN * z);
-      // 가장 깊이 내려가도 모래는 화면 아래 20%까지만 보인다.
-      const minY = size.h * 0.8 - floorY * z;
+      // 첫 진입과 가장 깊은 위치의 모래 노출 비율을 동일하게 유지한다.
+      const minY = size.h * (1 - SAND_SCREEN_RATIO) - floorY * z;
       const maxY = size.h * 1.3 - floorY * z;
       return { x, y: clamp(p.y, minY, maxY) };
     },
@@ -147,7 +148,7 @@ export function useMapViewport({ contentWidth, contentHeight, floorY, initialWor
     const z = clamp(minZoom * 1.15, minZoom, maxZoom);
     const nextPan = clampPan({
       x: size.w / 2 - initialWorldX * z,
-      y: size.h - groundBand - floorY * z,
+      y: size.h * (1 - SAND_SCREEN_RATIO) - floorY * z,
     }, z);
     // 같은 커밋에서 뒤따르는 보정 effect가 이전 ref 값으로 중앙 정렬을 덮지 않게 한다.
     zoomRef.current = z;

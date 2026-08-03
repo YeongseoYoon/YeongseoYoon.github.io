@@ -4,6 +4,7 @@ import { Bubbles } from '@/shared/ui';
 import { WANDER_RADIUS, type Creature } from '@/entities/creature';
 import type { WorldCreature } from '../model/world';
 import type { Viewport } from '../model/useMapViewport';
+import { SAND_SCREEN_RATIO } from '../model/mapLayout';
 import { SwimField } from './SwimField';
 
 interface AquariumMapProps {
@@ -77,14 +78,15 @@ export function AquariumMap({ placed, viewport, onSelect }: AquariumMapProps) {
       </div>
 
       {/*
-        모래 바닥 — 화면 높이의 20%짜리 얇은 띠.
+        모래 바닥 — 화면 높이의 15%짜리 얇은 띠.
         바닥선이 화면 아래로 내려가면 함께 잘려 나가며, 얕은 수심에서는 완전히 사라진다.
       */}
       <div
         data-testid="sand-floor"
-        className="sand-floor pointer-events-none absolute inset-x-0 h-1/5"
+        className="sand-floor pointer-events-none absolute inset-x-0"
         style={{
           top: floorScreenY,
+          height: `${SAND_SCREEN_RATIO * 100}%`,
           borderRadius: `46% 54% 0 0 / ${16 * zoom}px ${20 * zoom}px 0 0`,
           boxShadow: 'inset 0 8px 12px rgba(255,255,255,.45)',
         }}

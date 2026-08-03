@@ -28,11 +28,11 @@ function viewport(floorScreenY: number): Viewport {
 }
 
 describe('수족관 모래 바닥', () => {
-  it('화면 높이의 20% 띠로 렌더링하고 카메라 바닥선을 따라 이동한다', () => {
-    render(<AquariumMap placed={[]} viewport={viewport(640)} onSelect={noop} />);
+  it('화면 높이의 15% 띠로 렌더링하고 카메라 바닥선을 따라 이동한다', () => {
+    render(<AquariumMap placed={[]} viewport={viewport(680)} onSelect={noop} />);
     const sand = screen.getByTestId('sand-floor');
 
-    expect(sand.className).toContain('h-1/5');
-    expect(sand.style.top).toBe('640px');
+    expect(sand.style.height).toBe('15%');
+    expect(sand.style.top).toBe('680px');
   });
 });
