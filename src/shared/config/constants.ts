@@ -15,9 +15,6 @@ export type BrushSize = (typeof BRUSH_SIZES)[number];
 /** 작품 메시지 최대 길이 (PRD 7.1) */
 export const MESSAGE_MAX_LENGTH = 30;
 
-/** 일별 방류 한도 (PRD 9 창작량) */
-export const DAILY_RELEASE_LIMIT = 3;
-
 /** 신고 누적 임계 — 초과 시 운영자 확인 전까지 임시 숨김 (PRD 7.4) */
 export const AUTO_HIDE_REPORT_THRESHOLD = 3;
 

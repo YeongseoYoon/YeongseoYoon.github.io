@@ -5,9 +5,8 @@ import { useAsync } from '@/shared/lib';
 import { isSupabaseMode, subscribeToServerChanges } from '@/shared/api';
 import { creatureApi, type Creature } from '@/entities/creature';
 import { useSession } from '@/entities/session';
-import { getReleaseQuota } from '@/features/release-creature';
 import { ShareTankSheet } from '@/features/share-creature';
-import { MyCreatureList, MyTankPreview, ReleaseQuotaBar } from '@/widgets/my-tank';
+import { MyCreatureList, MyTankPreview } from '@/widgets/my-tank';
 
 /** 내 수조 (PRD 7·10). 내 생물·방류 상태 확인, 반려 사유 확인 후 재제출. */
 export function MyTankPage() {
@@ -20,18 +19,12 @@ export function MyTankPage() {
     () => (user ? creatureApi.listByAuthor(user.id) : Promise.resolve<Creature[]>([])),
     [user?.id],
   );
-  const { data: quota, refetch: refetchQuota } = useAsync(
-    () => (user ? getReleaseQuota(user.id) : Promise.resolve(null)),
-    [user?.id],
-  );
-
   useEffect(() => {
     if (!isSupabaseMode) return;
     return subscribeToServerChanges(['creatures'], () => {
       refetch();
-      refetchQuota();
     });
-  }, [refetch, refetchQuota]);
+  }, [refetch]);
 
   const sorted = useMemo(
     () => [...(creatures ?? [])]
@@ -67,7 +60,6 @@ export function MyTankPage() {
             creatures={sorted}
             className="lg:mx-0 lg:mt-1.5 lg:aspect-[16/9] lg:max-h-[420px]"
           />
-          {quota && <ReleaseQuotaBar quota={quota} className="lg:mx-0" />}
         </section>
 
         <MyCreatureList

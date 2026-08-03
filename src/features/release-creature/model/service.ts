@@ -3,7 +3,6 @@ import { isSpriteEmpty } from '@/shared/lib';
 import { isSupabaseMode } from '@/shared/api';
 import { creatureApi, type Creature, type CreatureKind } from '@/entities/creature';
 import { zoneApi } from '@/entities/zone';
-import { getReleaseQuota } from './quota';
 import { releaseCreatureOnServer, saveDraftOnServer } from '../api/supabaseRelease';
 
 export interface ReleaseInput {
@@ -71,11 +70,6 @@ export async function releaseCreature(input: ReleaseInput): Promise<Creature> {
   const name = validate(input);
   if (isSupabaseMode) return releaseCreatureOnServer({ ...input, name });
   return serializeRelease(async () => {
-    const quota = await getReleaseQuota(input.authorId);
-    if (quota.remaining <= 0) {
-      throw new Error('오늘 방류 한도를 모두 사용했어요. 내일 다시 시도해 주세요.');
-    }
-
     const zoneId = await pickReleaseZoneId();
     const now = Date.now();
 
@@ -105,7 +99,7 @@ export async function releaseCreature(input: ReleaseInput): Promise<Creature> {
   });
 }
 
-/** 임시저장 (PRD 8.1 draft). 방류 한도를 쓰지 않는다. */
+/** 임시저장 (PRD 8.1 draft). */
 export async function saveDraft(
   input: Omit<ReleaseInput, 'fromDraftId'> & { draftId?: string | null },
 ): Promise<Creature> {
