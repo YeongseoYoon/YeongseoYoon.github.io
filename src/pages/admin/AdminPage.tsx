@@ -8,8 +8,8 @@ import { AdminConsole } from '@/widgets/admin-review';
 
 /**
  * 운영자 검토 페이지 (PRD 7.3). 운영 권한이 있는 신원만 콘솔을 볼 수 있다.
- * - 앱인토스: 허용 목록(내 익명 키)에 포함될 때만 접근.
- * - 로컬 개발: 패스프레이즈로 임시 잠금 해제.
+ * - Supabase 배포: 서버 운영자 코드를 검증해 현재 기기의 익명 세션을 승인한다.
+ * - 로컬 개발: 패스프레이즈로 임시 잠금 해제한다.
  */
 export function AdminPage() {
   const { isAdmin, loading, inToss } = useSession();
